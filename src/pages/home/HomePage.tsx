@@ -1,15 +1,17 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, TrendingUp, Package, Users, Settings } from 'lucide-react'
+import { AlertTriangle, TrendingUp, Package, Users, Settings, Clock } from 'lucide-react'
 import { useReports } from '@/application/hooks/useReports'
 import { useSettingsStore } from '@/application/stores/settingsStore'
 import { centsToBRL } from '@/domain/formatters/currency'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
+import { StockBadge } from '@/components/stock/StockBadge'
+import { ExpiryBadge } from '@/components/stock/ExpiryBadge'
 
 export function HomePage() {
   const navigate = useNavigate()
-  const { businessName } = useSettingsStore()
+  const { businessName, lowStockThreshold, expirationAlertDays } = useSettingsStore()
   const { data, loading, load } = useReports()
 
   useEffect(() => { load('today') }, [load])
@@ -58,6 +60,45 @@ export function HomePage() {
               </span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Lista estoque baixo */}
+      {!loading && data && data.lowStockProducts.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
+            <Package className="h-4 w-4" />
+            Estoque baixo
+          </div>
+          <div className="space-y-1.5">
+            {data.lowStockProducts.map(p => {
+              const qty = data.stockEntries.find(e => e.productId === p.id)?.quantity ?? 0
+              return (
+                <div key={p.id} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5">
+                  <span className="text-sm font-medium">{p.name}</span>
+                  <StockBadge quantity={qty} threshold={lowStockThreshold} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Lista próximos ao vencimento */}
+      {!loading && data && data.nearExpiryProducts.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm font-semibold text-red-700">
+            <Clock className="h-4 w-4" />
+            Próximos ao vencimento
+          </div>
+          <div className="space-y-1.5">
+            {data.nearExpiryProducts.map(p => (
+              <div key={p.id} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5">
+                <span className="text-sm font-medium">{p.name}</span>
+                <ExpiryBadge expirationDate={p.expirationDate} alertDays={expirationAlertDays} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -185,7 +185,7 @@ export function NewSalePage() {
                     <FormItem>
                       <FormLabel>Preço unit. (R$)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" min="0.01" inputMode="decimal" {...field} />
+                        <Input type="number" step="0.01" min="0.01" inputMode="decimal" onFocus={(e) => e.target.select()} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

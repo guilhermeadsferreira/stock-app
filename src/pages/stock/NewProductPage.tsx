@@ -43,7 +43,7 @@ export function NewProductPage() {
           barcode: values.barcode || null,
           purchasePrice: floatToCents(values.purchasePrice),
           salePrice: floatToCents(values.salePrice),
-          expirationDate: values.expirationDate ? new Date(values.expirationDate) : null,
+          expirationDate: values.expirationDate ? new Date(values.expirationDate + 'T00:00:00') : null,
         },
         values.quantity,
       )
@@ -114,7 +114,7 @@ export function NewProductPage() {
                 <FormItem>
                   <FormLabel>Custo (R$) *</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" {...field} />
+                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" onFocus={(e) => e.target.select()} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -127,7 +127,7 @@ export function NewProductPage() {
                 <FormItem>
                   <FormLabel>Preço venda (R$) *</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" {...field} />
+                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" onFocus={(e) => e.target.select()} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

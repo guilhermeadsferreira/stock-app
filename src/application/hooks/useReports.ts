@@ -40,6 +40,7 @@ export interface ReportData {
   lowStockProducts: Product[]
   nearExpiryProducts: Product[]
   recentSalesCount: number
+  stockEntries: StockEntry[]
 }
 
 export function useReports() {
@@ -97,6 +98,7 @@ export function useReports() {
         lowStockProducts,
         nearExpiryProducts,
         recentSalesCount: cashSales.length,
+        stockEntries: entries,
       })
     } finally {
       setLoading(false)
