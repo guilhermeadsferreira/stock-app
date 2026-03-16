@@ -175,123 +175,121 @@ export function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Repor estoque */}
-      <div className="rounded-xl border border-border bg-white p-4 space-y-3">
-        <h2 className="font-semibold flex items-center gap-2">
-          <Package className="h-4 w-4" />
-          Repor estoque
-        </h2>
-        <Form {...restockForm}>
-          <form onSubmit={restockForm.handleSubmit(onRestock)} className="flex gap-2">
-            <FormField
-              control={restockForm.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Quantidade</FormLabel>
-                  <FormControl>
-                    <Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex items-end">
-              <Button type="submit" disabled={submittingRestock}>
+      {/* Ações de estoque: repor + corrigir lado a lado */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-border bg-white p-4 space-y-3">
+          <h2 className="font-semibold flex items-center gap-2 text-sm">
+            <Package className="h-4 w-4" />
+            Repor estoque
+          </h2>
+          <Form {...restockForm}>
+            <form onSubmit={restockForm.handleSubmit(onRestock)} className="space-y-2">
+              <FormField
+                control={restockForm.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qtd a adicionar</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" size="sm" disabled={submittingRestock}>
                 {submittingRestock ? 'Salvando...' : 'Repor'}
               </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
+            </form>
+          </Form>
+        </div>
 
-      {/* Corrigir estoque */}
-      <div className="rounded-xl border border-border bg-white p-4 space-y-3">
-        <h2 className="font-semibold flex items-center gap-2">
-          <Pencil className="h-4 w-4" />
-          Corrigir estoque
-        </h2>
-        <p className="text-xs text-muted-foreground">Define a quantidade exata atual em estoque.</p>
-        <Form {...adjustForm}>
-          <form onSubmit={adjustForm.handleSubmit(onAdjust)} className="flex gap-2">
-            <FormField
-              control={adjustForm.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Nova quantidade</FormLabel>
-                  <FormControl>
-                    <Input type="number" min="0" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex items-end">
-              <Button type="submit" variant="outline" disabled={submittingAdjust}>
+        <div className="rounded-xl border border-border bg-white p-4 space-y-3">
+          <h2 className="font-semibold flex items-center gap-2 text-sm">
+            <Pencil className="h-4 w-4" />
+            Corrigir estoque
+          </h2>
+          <Form {...adjustForm}>
+            <form onSubmit={adjustForm.handleSubmit(onAdjust)} className="space-y-2">
+              <FormField
+                control={adjustForm.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nova quantidade</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" variant="outline" className="w-full" size="sm" disabled={submittingAdjust}>
                 {submittingAdjust ? 'Salvando...' : 'Corrigir'}
               </Button>
-            </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </div>
       </div>
 
       {/* Ações destrutivas */}
       <div className="rounded-xl border border-destructive/30 bg-white p-4 space-y-3">
-        <h2 className="font-semibold flex items-center gap-2 text-destructive">
+        <h2 className="font-semibold flex items-center gap-2 text-sm text-destructive">
           <Trash2 className="h-4 w-4" />
           Ações destrutivas
         </h2>
 
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={<Button variant="outline" className="w-full border-destructive/40 text-destructive hover:bg-destructive/5" disabled={submittingReset} />}
-          >
-            Zerar estoque
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Zerar estoque?</AlertDialogTitle>
-              <AlertDialogDescription>
-                A entrada de estoque de <strong>{product.name}</strong> será removida. O histórico de movimentações é mantido.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleResetStock}
-              >
-                Zerar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="grid grid-cols-2 gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={<Button variant="outline" size="sm" className="w-full border-destructive/40 text-destructive hover:bg-destructive/5" disabled={submittingReset} />}
+            >
+              Zerar estoque
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Zerar estoque?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  A entrada de estoque de <strong>{product.name}</strong> será removida. O histórico de movimentações é mantido.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={handleResetStock}
+                >
+                  Zerar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={<Button variant="destructive" className="w-full" disabled={submittingDelete} />}
-          >
-            Excluir produto
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir produto?</AlertDialogTitle>
-              <AlertDialogDescription>
-                <strong>{product.name}</strong> será excluído permanentemente junto com seu estoque. Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleDeleteProduct}
-              >
-                Excluir
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={<Button variant="destructive" size="sm" className="w-full" disabled={submittingDelete} />}
+            >
+              Excluir produto
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir produto?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  <strong>{product.name}</strong> será excluído permanentemente junto com seu estoque. Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={handleDeleteProduct}
+                >
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </div>
   )
