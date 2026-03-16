@@ -49,7 +49,7 @@ export function HomePage() {
           )}
           {data.nearExpiryProducts.length > 0 && (
             <button
-              onClick={() => navigate('/stock')}
+              onClick={() => navigate('/stock?filter=expiring')}
               className="flex w-full items-center gap-3 rounded-2xl border-l-[3px] border-red-400 bg-red-50 px-4 py-3 text-left transition-colors active:bg-red-100"
             >
               <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-600" />

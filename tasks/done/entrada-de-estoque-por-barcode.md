@@ -1,6 +1,6 @@
 # Entrada de Estoque por Código de Barras
 
-**Status:** pendente
+**Status:** concluído
 **Categoria:** feature
 **Artefato:** Nova página `StockScanPage` + rota `/stock/scan` com fluxo inteligente de scan → repor ou cadastrar
 

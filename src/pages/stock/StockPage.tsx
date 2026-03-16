@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, ScanLine } from 'lucide-react'
 import { useProducts } from '@/application/hooks/useProducts'
 import { useStock } from '@/application/hooks/useStock'
 import { useSettingsStore } from '@/application/stores/settingsStore'
 import { centsToBRL } from '@/domain/formatters/currency'
+import { isNearExpiry, isExpired } from '@/domain/rules/stock.rules'
 import { StockBadge } from '@/components/stock/StockBadge'
+import { ExpiryBadge } from '@/components/stock/ExpiryBadge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+
+type ExpiryFilter = 'all' | 'expiring' | 'expired'
 
 export function StockPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const { products, loading, load } = useProducts()
   const { entries, loadEntries } = useStock()
-  const { lowStockThreshold } = useSettingsStore()
+  const { lowStockThreshold, expirationAlertDays } = useSettingsStore()
+
+  const expiryFilter = (searchParams.get('filter') as ExpiryFilter) ?? 'all'
 
   useEffect(() => {
     load()
@@ -24,10 +32,30 @@ export function StockPage() {
 
   const entryMap = new Map(entries.map(e => [e.productId, e.quantity]))
 
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.barcode && p.barcode.includes(search)),
-  )
+  const filtered = products.filter(p => {
+    const matchesSearch =
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.barcode && p.barcode.includes(search))
+    if (!matchesSearch) return false
+
+    if (expiryFilter === 'expiring') return isNearExpiry(p.expirationDate, expirationAlertDays)
+    if (expiryFilter === 'expired') return isExpired(p.expirationDate)
+    return true
+  })
+
+  function setFilter(filter: ExpiryFilter) {
+    if (filter === 'all') {
+      setSearchParams({})
+    } else {
+      setSearchParams({ filter })
+    }
+  }
+
+  const chips: { key: ExpiryFilter; label: string }[] = [
+    { key: 'all', label: 'Todos' },
+    { key: 'expiring', label: 'A vencer' },
+    { key: 'expired', label: 'Vencidos' },
+  ]
 
   return (
     <div className="space-y-4 px-5 pt-8">
@@ -55,13 +83,30 @@ export function StockPage() {
         />
       </div>
 
+      <div className="flex gap-2">
+        {chips.map(chip => (
+          <button
+            key={chip.key}
+            onClick={() => setFilter(chip.key)}
+            className={cn(
+              'rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors',
+              expiryFilter === chip.key
+                ? 'bg-foreground text-background'
+                : 'bg-card text-muted-foreground border border-border/60',
+            )}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="space-y-2.5">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-[68px] w-full rounded-2xl" />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center text-muted-foreground text-sm">
-          {search ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado ainda'}
+          {search || expiryFilter !== 'all' ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado ainda'}
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -75,10 +120,16 @@ export function StockPage() {
                 <p className="font-semibold text-[15px]">{product.name}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">{centsToBRL(product.salePrice)}</p>
               </div>
-              <StockBadge
-                quantity={entryMap.get(product.id) ?? 0}
-                threshold={lowStockThreshold}
-              />
+              <div className="flex items-center gap-1.5">
+                <ExpiryBadge
+                  expirationDate={product.expirationDate}
+                  alertDays={expirationAlertDays}
+                />
+                <StockBadge
+                  quantity={entryMap.get(product.id) ?? 0}
+                  threshold={lowStockThreshold}
+                />
+              </div>
             </button>
           ))}
         </div>

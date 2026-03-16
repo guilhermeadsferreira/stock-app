@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Living Documentation
+
+The `docs/` folder contains three documents that must stay in sync with the codebase:
+
+- `docs/PITCH.md` — product pitch (update when scope, target audience, or key features change)
+- `docs/PRODUCT_STATUS.md` — current feature status and backlog (update when features are added, completed, or reprioritized; always update "Última atualização" date)
+- `docs/TECH.md` — technical reference (update when stack, architecture, routes, DB schema, or conventions change; always update "Última atualização" date)
+
+**Rule:** after any change that affects product features or technical structure, review and update the relevant doc(s) in the same commit/session.
+
 ## Commands
 
 ```bash
