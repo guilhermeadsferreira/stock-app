@@ -1,6 +1,6 @@
 # Documentação Técnica — StockApp
 
-> Última atualização: 2026-03-16
+> Última atualização: 2026-03-16 (rev 2)
 
 ## Stack
 
@@ -52,6 +52,8 @@ Núcleo da aplicação — zero dependência de framework ou banco.
 
 - **`supabase/client.ts`** — singleton do Supabase; usa `db: { schema: 'stock' }`
 - **`supabase/*Repository.ts`** — implementam as interfaces do domain; cada um tem `mapRow()` privado (snake_case DB → camelCase domain)
+- **`supabase/StockRepository.ts`** — método `deleteEntry` remove a linha de `stock_entries` (os `stock_movements` são mantidos por serem append-only)
+- **`supabase/SaleRepository.ts`** — método `hasProductSales` (count query) verifica se existem vendas para um produto antes da exclusão
 - **`db/schema.ts`** — Drizzle: fonte da verdade do schema DB
 
 ### Application (`src/application/`)
@@ -60,6 +62,9 @@ Núcleo da aplicação — zero dependência de framework ou banco.
 - **`stores/settingsStore.ts`** — Zustand com persist no `localStorage` (`businessName`, `lowStockThreshold`, `expirationAlertDays`)
 - **`hooks/useSales.ts`** — **orquestrador crítico**: única entrada de escrita em `sales`, `stock_movements` e `stock_entries`
 - **`hooks/useBarcode.ts`** — sempre chamar `stopScan()` no unmount do componente
+- **`hooks/useStock.ts`** — expõe `replenish` (incremento + movimento `purchase`), `adjustQuantity` (ajuste exato + movimento `adjustment`) e `removeEntry` (deleta `stock_entry`)
+- **`hooks/useProducts.ts`** — `remove` verifica `hasProductSales` antes de deletar; lança erro se houver vendas vinculadas
+- **`hooks/useReports.ts`** — `ReportData` expõe `stockEntries[]` além das listas de alertas
 
 ### Pages (`src/pages/`)
 
@@ -176,6 +181,7 @@ npm run db:push       # aplica schema no Supabase (requer DATABASE_URL)
 ## Convenções de Código
 
 - **Dinheiro**: sempre inteiros em centavos. Nunca usar `float` para valores monetários. Converter apenas em `src/domain/formatters/currency.ts`
+- **Parsing de datas de input `type="date"`**: usar `new Date(value + 'T00:00:00')` (sem Z) para forçar interpretação como meia-noite no fuso local. `new Date("YYYY-MM-DD")` sem sufixo é tratado como UTC pelo ECMAScript e causa deslocamento de 1 dia em fusos negativos (ex: UTC-3).
 - **`z.coerce.number()` + zodResolver**: requer cast `as any` (incompatibilidade conhecida zod v4 / react-hook-form v7). Usar `z.output<typeof schema>` como alias de tipo de formulário
 - **`erasableSyntaxOnly` desabilitado**: permite `private readonly` em parâmetros de construtores de classe
 - **Repositórios**: cada um tem `mapRow()` privado para conversão snake_case → camelCase

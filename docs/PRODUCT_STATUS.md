@@ -1,6 +1,6 @@
 # Product Status — StockApp
 
-> Última atualização: 2026-03-16
+> Última atualização: 2026-03-16 (rev 2)
 
 ## Estado Geral
 
@@ -24,8 +24,10 @@
 - [x] Filtro por estoque baixo e produtos vencendo
 - [x] Tela de detalhe do produto
 - [x] Reposição de estoque na tela de detalhe
+- [x] Correção manual de quantidade em estoque (ajuste para valor exato, registra movimento `adjustment`)
+- [x] Zeragem de estoque (remove `stock_entry`, mantém histórico de movimentações)
+- [x] Exclusão de produto com confirmação (bloqueada se o produto tiver vendas registradas)
 - [ ] Edição de produto (hook existe, UI não implementada)
-- [ ] Inativação/exclusão de produto
 
 ### Vendas
 - [x] Fluxo multi-step: produto → quantidade/preço → pagamento → cliente → confirmação
@@ -44,14 +46,16 @@
 ### Estoque
 - [x] Controle de quantidade por produto
 - [x] Audit log append-only de todas as movimentações (tipo, razão, quantidade)
+- [x] Entrada de estoque por leitura de código de barras (tela dedicada `/stock/scan`)
+- [x] Alertas de vencimento com filtros na tela de estoque (filtro "vencendo" e "vencidos")
 - [ ] Tela de histórico de movimentações por produto (dados existem, UI não implementada)
 
-### Relatórios
+### Relatórios / Home
 - [x] Valor total em estoque (custo)
 - [x] Vendas à vista por período (hoje / semana / mês)
 - [x] Total de fiado em aberto (valor + contagem de clientes)
-- [x] Alertas: produtos com estoque baixo
-- [x] Alertas: produtos perto do vencimento
+- [x] Alertas: produtos com estoque baixo (banner + lista com badge na Home)
+- [x] Alertas: produtos perto do vencimento (banner + lista com badge na Home)
 - [ ] Exportação CSV/PDF
 - [ ] Relatório de rentabilidade por produto
 
@@ -78,7 +82,6 @@
 ### Média prioridade
 4. **Cadastro de cliente inline no fluxo de venda** — hoje precisa sair do fluxo para criar
 5. **PWA / instalável** — manifest + service worker para experiência nativa no mobile
-6. **Soft-delete de produto** — marcar como inativo sem apagar histórico
 
 ### Baixa prioridade / futuro
 7. Exportação de relatórios (CSV/PDF)
