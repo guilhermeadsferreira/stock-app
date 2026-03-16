@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 import { useReports, type Period } from '@/application/hooks/useReports'
 import { centsToBRL } from '@/domain/formatters/currency'
 import { formatExpiryLabel } from '@/domain/formatters/date'
@@ -19,28 +20,33 @@ export function ReportsPage() {
   useEffect(() => { load(period) }, [load, period])
 
   return (
-    <div className="space-y-5 px-4 pt-6 pb-8">
-      <h1 className="text-xl font-bold">Relatórios</h1>
+    <div className="space-y-4 px-5 pt-8 pb-8">
+      <h1 className="text-2xl font-bold tracking-tight">Relatórios</h1>
 
       {/* Valor em estoque */}
-      <section className="rounded-xl border border-border bg-white p-4 space-y-1">
-        <p className="text-sm text-muted-foreground">Valor total em estoque</p>
+      <div className="rounded-2xl bg-card p-5 shadow-sm">
+        <p className="text-xs font-medium text-muted-foreground mb-3">Valor total em estoque</p>
         {loading
           ? <Skeleton className="h-8 w-36" />
-          : <p className="text-2xl font-bold">{centsToBRL(data?.stockValue ?? 0)}</p>
+          : <p className="text-3xl font-bold text-foreground leading-none tracking-tight">{centsToBRL(data?.stockValue ?? 0)}</p>
         }
-      </section>
+      </div>
 
       {/* Vendas à vista */}
-      <section className="rounded-xl border border-border bg-white p-4 space-y-3">
+      <div className="rounded-2xl bg-card p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
-          <p className="font-semibold">Vendas à vista</p>
-          <div className="flex rounded-lg overflow-hidden border border-border text-xs">
+          <p className="font-semibold text-[15px]">Vendas à vista</p>
+          <div className="flex rounded-xl bg-muted p-0.5 gap-0.5">
             {(Object.keys(periodLabels) as Period[]).map(p => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 transition-colors ${period === p ? 'bg-primary text-white' : 'bg-white text-muted-foreground hover:bg-gray-50'}`}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200',
+                  period === p
+                    ? 'bg-white text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
               >
                 {periodLabels[p]}
               </button>
@@ -49,59 +55,59 @@ export function ReportsPage() {
         </div>
         {loading
           ? <Skeleton className="h-8 w-32" />
-          : <p className="text-2xl font-bold text-green-700">{centsToBRL(data?.cashSalesTotal ?? 0)}</p>
+          : <p className="text-3xl font-bold text-emerald-700 leading-none tracking-tight">{centsToBRL(data?.cashSalesTotal ?? 0)}</p>
         }
-      </section>
+      </div>
 
       {/* Fiado em aberto */}
       <button
         onClick={() => navigate('/credit')}
-        className="w-full rounded-xl border border-blue-200 bg-blue-50 p-4 text-left space-y-1"
+        className="w-full rounded-2xl bg-[#1e3a8a] p-5 text-left transition-opacity active:opacity-90"
       >
-        <p className="font-semibold text-blue-800">Fiado em aberto</p>
+        <p className="text-sm font-medium text-blue-200 mb-3">Fiado em aberto</p>
         {loading
-          ? <Skeleton className="h-8 w-32" />
-          : <p className="text-2xl font-bold text-blue-700">{centsToBRL(data?.openCreditTotal ?? 0)}</p>
+          ? <Skeleton className="h-8 w-32 bg-white/20" />
+          : <p className="text-3xl font-bold text-white leading-none tracking-tight">{centsToBRL(data?.openCreditTotal ?? 0)}</p>
         }
         {!loading && (data?.openCreditCustomerCount ?? 0) > 0 && (
-          <p className="text-sm text-blue-600">{data!.openCreditCustomerCount} clientes</p>
+          <p className="text-xs text-blue-300 mt-2">{data!.openCreditCustomerCount} clientes</p>
         )}
       </button>
 
       {/* Estoque baixo */}
       {!loading && (data?.lowStockProducts.length ?? 0) > 0 && (
-        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2">
-          <p className="font-semibold text-amber-800">Estoque baixo</p>
+        <div className="rounded-2xl border-l-[3px] border-amber-400 bg-amber-50 p-4 space-y-2">
+          <p className="font-semibold text-sm text-amber-900">Estoque baixo</p>
           {data!.lowStockProducts.map(p => (
             <button
               key={p.id}
               onClick={() => navigate(`/stock/${p.id}`)}
-              className="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm"
+              className="flex w-full items-center justify-between rounded-xl bg-white px-3 py-2.5 text-sm shadow-sm"
             >
-              <span>{p.name}</span>
-              <span className="text-amber-600 font-medium">Ver</span>
+              <span className="font-medium">{p.name}</span>
+              <span className="text-amber-600 font-semibold text-xs">Ver →</span>
             </button>
           ))}
-        </section>
+        </div>
       )}
 
       {/* Próximos ao vencimento */}
       {!loading && (data?.nearExpiryProducts.length ?? 0) > 0 && (
-        <section className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-2">
-          <p className="font-semibold text-red-800">Próximos ao vencimento</p>
+        <div className="rounded-2xl border-l-[3px] border-red-400 bg-red-50 p-4 space-y-2">
+          <p className="font-semibold text-sm text-red-900">Próximos ao vencimento</p>
           {data!.nearExpiryProducts.map(p => (
             <button
               key={p.id}
               onClick={() => navigate(`/stock/${p.id}`)}
-              className="flex w-full items-center justify-between rounded-lg border border-red-200 bg-white px-3 py-2 text-sm"
+              className="flex w-full items-center justify-between rounded-xl bg-white px-3 py-2.5 text-sm shadow-sm"
             >
-              <span>{p.name}</span>
-              <span className="text-red-600 font-medium">
+              <span className="font-medium">{p.name}</span>
+              <span className="text-red-600 font-semibold text-xs">
                 {p.expirationDate ? formatExpiryLabel(p.expirationDate) : ''}
               </span>
             </button>
           ))}
-        </section>
+        </div>
       )}
     </div>
   )

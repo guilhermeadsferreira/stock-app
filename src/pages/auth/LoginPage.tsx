@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Package } from 'lucide-react'
 import { useAuth } from '@/application/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,14 +44,15 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
-            <span className="text-2xl">📦</span>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-6">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="mb-10 flex flex-col items-center text-center">
+          <div className="mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
+            <Package className="h-7 w-7 text-white" strokeWidth={1.5} />
           </div>
-          <h1 className="text-2xl font-bold">Gestão de Estoque</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Entre na sua conta</p>
+          <h1 className="text-2xl font-bold tracking-tight">Gestão de Estoque</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">Entre na sua conta para continuar</p>
         </div>
 
         <Form {...form}>
@@ -61,9 +62,15 @@ export function LoginPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="font-medium">Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="seu@email.com" autoComplete="email" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="seu@email.com"
+                      autoComplete="email"
+                      className="rounded-xl h-11"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -74,23 +81,33 @@ export function LoginPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Senha</FormLabel>
+                  <FormLabel className="font-medium">Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" autoComplete="current-password" {...field} />
+                    <Input
+                      type="password"
+                      placeholder="••••••"
+                      autoComplete="current-password"
+                      className="rounded-xl h-11"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button
+              type="submit"
+              className="mt-2 w-full h-11 rounded-xl font-semibold text-base"
+              disabled={submitting}
+            >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Entrar'}
             </Button>
           </form>
         </Form>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="mt-7 text-center text-sm text-muted-foreground">
           Não tem conta?{' '}
-          <Link to="/signup" className="font-medium text-primary hover:underline">
+          <Link to="/signup" className="font-semibold text-primary">
             Criar conta
           </Link>
         </p>

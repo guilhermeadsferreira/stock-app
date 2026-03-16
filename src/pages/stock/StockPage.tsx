@@ -30,44 +30,44 @@ export function StockPage() {
   )
 
   return (
-    <div className="space-y-4 px-4 pt-6">
+    <div className="space-y-4 px-5 pt-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Estoque</h1>
-        <Button size="sm" onClick={() => navigate('/stock/new')}>
-          <Plus className="h-4 w-4" />
+        <h1 className="text-2xl font-bold tracking-tight">Estoque</h1>
+        <Button size="sm" onClick={() => navigate('/stock/new')} className="rounded-xl gap-1.5">
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Novo
         </Button>
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" strokeWidth={1.75} />
         <Input
           placeholder="Buscar produto ou código..."
-          className="pl-9"
+          className="pl-10 rounded-xl bg-card border-border/60"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
       </div>
 
       {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+        <div className="space-y-2.5">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-[68px] w-full rounded-2xl" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
+        <div className="py-16 text-center text-muted-foreground text-sm">
           {search ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado ainda'}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {filtered.map(product => (
             <button
               key={product.id}
               onClick={() => navigate(`/stock/${product.id}`)}
-              className="flex w-full items-center justify-between rounded-xl border border-border bg-white p-4 text-left hover:bg-gray-50 active:scale-[0.98] transition-transform"
+              className="flex w-full items-center justify-between rounded-2xl bg-card px-4 py-3.5 text-left shadow-sm active:scale-[0.99] active:shadow-none transition-all duration-150"
             >
               <div>
-                <p className="font-medium">{product.name}</p>
-                <p className="text-sm text-muted-foreground">{centsToBRL(product.salePrice)}</p>
+                <p className="font-semibold text-[15px]">{product.name}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{centsToBRL(product.salePrice)}</p>
               </div>
               <StockBadge
                 quantity={entryMap.get(product.id) ?? 0}
