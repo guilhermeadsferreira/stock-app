@@ -94,6 +94,15 @@ export class StockRepository implements IStockRepository {
     return mapMovement(data)
   }
 
+  async deleteEntry(userId: string, productId: string): Promise<void> {
+    const { error } = await this.client
+      .from('stock_entries')
+      .delete()
+      .eq('user_id', userId)
+      .eq('product_id', productId)
+    if (error) throw new Error(error.message)
+  }
+
   async listMovements(userId: string, productId: string): Promise<StockMovement[]> {
     const { data, error } = await this.client
       .from('stock_movements')

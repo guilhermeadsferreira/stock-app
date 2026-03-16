@@ -40,6 +40,16 @@ export class SaleRepository implements ISaleRepository {
     return mapRow(data)
   }
 
+  async hasProductSales(userId: string, productId: string): Promise<boolean> {
+    const { count, error } = await this.client
+      .from('sales')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('product_id', productId)
+    if (error) return false
+    return (count ?? 0) > 0
+  }
+
   async listByUser(userId: string, filters?: SaleFilters): Promise<Sale[]> {
     let query = this.client
       .from('sales')

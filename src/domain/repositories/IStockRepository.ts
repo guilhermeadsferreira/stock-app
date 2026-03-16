@@ -18,4 +18,5 @@ export interface IStockRepository {
   decrementEntry(userId: string, productId: string, quantity: number): Promise<StockEntry>
   addMovement(input: AddMovementInput): Promise<StockMovement>
   listMovements(userId: string, productId: string): Promise<StockMovement[]>
+  deleteEntry(userId: string, productId: string): Promise<void>
 }

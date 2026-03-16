@@ -2,12 +2,14 @@ import { useState, useCallback } from 'react'
 import { supabase } from '@/infrastructure/supabase/client'
 import { ProductRepository } from '@/infrastructure/supabase/ProductRepository'
 import { StockRepository } from '@/infrastructure/supabase/StockRepository'
+import { SaleRepository } from '@/infrastructure/supabase/SaleRepository'
 import { useAuthStore } from '@/application/stores/authStore'
 import type { Product } from '@/domain/types'
 import type { ProductFilters } from '@/domain/repositories/IProductRepository'
 
 const productRepo = new ProductRepository(supabase)
 const stockRepo = new StockRepository(supabase)
+const saleRepo = new SaleRepository(supabase)
 
 export function useProducts() {
   const { user } = useAuthStore()
@@ -58,6 +60,8 @@ export function useProducts() {
 
   const remove = useCallback(async (productId: string) => {
     if (!user) throw new Error('Não autenticado')
+    const hasSales = await saleRepo.hasProductSales(user.id, productId)
+    if (hasSales) throw new Error('Este produto possui vendas registradas e não pode ser excluído.')
     await productRepo.delete(user.id, productId)
   }, [user])
 

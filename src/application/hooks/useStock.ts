@@ -45,10 +45,38 @@ export function useStock() {
     return entry
   }, [user])
 
+  const adjustQuantity = useCallback(async (
+    productId: string,
+    newQuantity: number,
+    notes?: string,
+  ): Promise<StockEntry> => {
+    if (!user) throw new Error('Não autenticado')
+    const current = await stockRepo.getEntry(user.id, productId)
+    const currentQty = current?.quantity ?? 0
+    const diff = newQuantity - currentQty
+    const entry = await stockRepo.upsertEntry(user.id, productId, newQuantity)
+    if (diff !== 0) {
+      await stockRepo.addMovement({
+        userId: user.id,
+        productId,
+        type: diff > 0 ? 'in' : 'out',
+        reason: 'adjustment',
+        quantity: Math.abs(diff),
+        notes,
+      })
+    }
+    return entry
+  }, [user])
+
+  const removeEntry = useCallback(async (productId: string): Promise<void> => {
+    if (!user) throw new Error('Não autenticado')
+    await stockRepo.deleteEntry(user.id, productId)
+  }, [user])
+
   const listMovements = useCallback(async (productId: string): Promise<StockMovement[]> => {
     if (!user) return []
     return stockRepo.listMovements(user.id, productId)
   }, [user])
 
-  return { entries, loading, loadEntries, getEntry, replenish, listMovements }
+  return { entries, loading, loadEntries, getEntry, replenish, adjustQuantity, removeEntry, listMovements }
 }
