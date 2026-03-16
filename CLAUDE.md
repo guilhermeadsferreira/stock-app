@@ -10,7 +10,14 @@ The `docs/` folder contains three documents that must stay in sync with the code
 - `docs/PRODUCT_STATUS.md` — current feature status and backlog (update when features are added, completed, or reprioritized; always update "Última atualização" date)
 - `docs/TECH.md` — technical reference (update when stack, architecture, routes, DB schema, or conventions change; always update "Última atualização" date)
 
-**Rule:** after any change that affects product features or technical structure, review and update the relevant doc(s) in the same commit/session.
+**MANDATORY — no exceptions:** before every commit (including bug fixes and UX changes), run through this checklist:
+
+- [ ] Did I add, complete, or remove a feature? → update `PRODUCT_STATUS.md` (check/uncheck items, adjust backlog)
+- [ ] Did I add/change a hook, repository method, route, convention, or DB schema? → update `TECH.md`
+- [ ] Did I change the product scope or target audience? → update `PITCH.md`
+- [ ] Did I update any doc? → bump "Última atualização" date in that doc
+
+Docs are never optional. A commit that changes behavior without updating the relevant doc is incomplete.
 
 ## Commands
 
