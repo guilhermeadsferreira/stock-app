@@ -1,0 +1,170 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import { ArrowLeft, ScanLine } from 'lucide-react'
+import { useProducts } from '@/application/hooks/useProducts'
+import { floatToCents } from '@/domain/formatters/currency'
+import { BarcodeScanner } from '@/components/stock/BarcodeScanner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+
+const schema = z.object({
+  name: z.string().min(1, 'Nome obrigatório'),
+  barcode: z.string().optional(),
+  purchasePrice: z.coerce.number().min(0.01, 'Preço obrigatório'),
+  salePrice: z.coerce.number().min(0.01, 'Preço obrigatório'),
+  expirationDate: z.string().optional(),
+  quantity: z.coerce.number().int().min(0),
+})
+type FormValues = z.output<typeof schema>
+
+export function NewProductPage() {
+  const navigate = useNavigate()
+  const { create } = useProducts()
+  const [scanning, setScanning] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    defaultValues: { name: '', barcode: '', purchasePrice: 0, salePrice: 0, expirationDate: '', quantity: 0 },
+  })
+
+  async function onSubmit(values: FormValues) {
+    setSubmitting(true)
+    try {
+      await create(
+        {
+          name: values.name,
+          barcode: values.barcode || null,
+          purchasePrice: floatToCents(values.purchasePrice),
+          salePrice: floatToCents(values.salePrice),
+          expirationDate: values.expirationDate ? new Date(values.expirationDate) : null,
+        },
+        values.quantity,
+      )
+      toast.success('Produto cadastrado!')
+      navigate('/stock')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao salvar produto')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4 px-4 pt-6 pb-8">
+      <button onClick={() => navigate('/stock')} className="flex items-center gap-1 text-sm text-muted-foreground">
+        <ArrowLeft className="h-4 w-4" />
+        Estoque
+      </button>
+      <h1 className="text-xl font-bold">Novo produto</h1>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome do produto *</FormLabel>
+                <FormControl><Input placeholder="Ex: Coca-Cola 350ml" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="barcode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código de barras</FormLabel>
+                {scanning ? (
+                  <BarcodeScanner
+                    onResult={(code) => {
+                      field.onChange(code)
+                      setScanning(false)
+                      toast.success('Código lido: ' + code)
+                    }}
+                    onClose={() => setScanning(false)}
+                  />
+                ) : (
+                  <div className="flex gap-2">
+                    <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
+                    <Button type="button" variant="outline" onClick={() => setScanning(true)} size="icon">
+                      <ScanLine className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="purchasePrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Custo (R$) *</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="salePrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preço venda (R$) *</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="expirationDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data de validade</FormLabel>
+                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Quantidade inicial *</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" inputMode="numeric" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+            {submitting ? 'Salvando...' : 'Cadastrar produto'}
+          </Button>
+        </form>
+      </Form>
+    </div>
+  )
+}

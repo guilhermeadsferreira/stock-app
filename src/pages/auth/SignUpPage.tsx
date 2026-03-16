@@ -1,0 +1,141 @@
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
+import { useAuth } from '@/application/hooks/useAuth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+
+const schema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+  confirmPassword: z.string(),
+}).refine(d => d.password === d.confirmPassword, {
+  message: 'As senhas não coincidem',
+  path: ['confirmPassword'],
+})
+type FormValues = z.infer<typeof schema>
+
+export function SignUpPage() {
+  const navigate = useNavigate()
+  const { signUp } = useAuth()
+  const [submitting, setSubmitting] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState('')
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', password: '', confirmPassword: '' },
+  })
+
+  async function onSubmit(values: FormValues) {
+    setSubmitting(true)
+    try {
+      await signUp(values.email, values.password)
+      setRegisteredEmail(values.email)
+      setEmailSent(true)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao criar conta')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-sm space-y-6 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+            <span className="text-2xl">✉️</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Confirme seu email</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Enviamos um link de confirmação para{' '}
+              <span className="font-medium text-foreground">{registeredEmail}</span>.
+              Clique no link antes de fazer login.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Não recebeu? Verifique a pasta de spam.
+            </p>
+          </div>
+          <Button className="w-full" onClick={() => navigate('/login')}>
+            Ir para o login
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-sm space-y-8">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+            <span className="text-2xl">📦</span>
+          </div>
+          <h1 className="text-2xl font-bold">Criar conta</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Comece a gerenciar seu estoque</p>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="seu@email.com" autoComplete="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••" autoComplete="new-password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirmar senha</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••" autoComplete="new-password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar conta'}
+            </Button>
+          </form>
+        </Form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Já tem conta?{' '}
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            Entrar
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}

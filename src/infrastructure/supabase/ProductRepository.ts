@@ -1,0 +1,110 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { IProductRepository, ProductFilters } from '@/domain/repositories/IProductRepository'
+import type { Product } from '@/domain/types'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapRow(row: any): Product {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    barcode: row.barcode ?? null,
+    purchasePrice: row.purchase_price,
+    salePrice: row.sale_price,
+    expirationDate: row.expiration_date ? new Date(row.expiration_date) : null,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  }
+}
+
+export class ProductRepository implements IProductRepository {
+  constructor(private readonly client: SupabaseClient<any, any, any>) {}
+
+  async findById(userId: string, productId: string): Promise<Product | null> {
+    const { data, error } = await this.client
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .eq('user_id', userId)
+      .single()
+    if (error || !data) return null
+    return mapRow(data)
+  }
+
+  async findByBarcode(userId: string, barcode: string): Promise<Product | null> {
+    const { data, error } = await this.client
+      .from('products')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('barcode', barcode)
+      .single()
+    if (error || !data) return null
+    return mapRow(data)
+  }
+
+  async list(userId: string, filters?: ProductFilters): Promise<Product[]> {
+    let query = this.client
+      .from('products')
+      .select('*')
+      .eq('user_id', userId)
+      .order('name', { ascending: true })
+
+    if (filters?.search) {
+      query = query.ilike('name', `%${filters.search}%`)
+    }
+
+    const { data, error } = await query
+    if (error || !data) return []
+    return data.map(mapRow)
+  }
+
+  async create(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+    const { data, error } = await this.client
+      .from('products')
+      .insert({
+        user_id: product.userId,
+        name: product.name,
+        barcode: product.barcode,
+        purchase_price: product.purchasePrice,
+        sale_price: product.salePrice,
+        expiration_date: product.expirationDate?.toISOString() ?? null,
+      })
+      .select()
+      .single()
+    if (error || !data) throw new Error(error?.message ?? 'Erro ao criar produto')
+    return mapRow(data)
+  }
+
+  async update(
+    userId: string,
+    productId: string,
+    data: Partial<Omit<Product, 'id' | 'userId' | 'createdAt'>>,
+  ): Promise<Product> {
+    const updateData: Record<string, unknown> = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.barcode !== undefined) updateData.barcode = data.barcode
+    if (data.purchasePrice !== undefined) updateData.purchase_price = data.purchasePrice
+    if (data.salePrice !== undefined) updateData.sale_price = data.salePrice
+    if (data.expirationDate !== undefined) updateData.expiration_date = data.expirationDate?.toISOString() ?? null
+    updateData.updated_at = new Date().toISOString()
+
+    const { data: row, error } = await this.client
+      .from('products')
+      .update(updateData)
+      .eq('id', productId)
+      .eq('user_id', userId)
+      .select()
+      .single()
+    if (error || !row) throw new Error(error?.message ?? 'Erro ao atualizar produto')
+    return mapRow(row)
+  }
+
+  async delete(userId: string, productId: string): Promise<void> {
+    const { error } = await this.client
+      .from('products')
+      .delete()
+      .eq('id', productId)
+      .eq('user_id', userId)
+    if (error) throw new Error(error.message)
+  }
+}

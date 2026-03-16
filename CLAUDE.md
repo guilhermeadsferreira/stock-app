@@ -2,73 +2,78 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Status
+## Commands
 
-This project is in the **specification phase**. The PRD and technical spec live in `stock-app-prd-tech.md`. No source code exists yet.
+```bash
+npm run dev          # dev server
+npm run build        # tsc + vite build → dist/
+npm test             # vitest run (all unit tests)
+npm run test:watch   # vitest watch mode
+npm run test:coverage
+npm run db:generate  # drizzle-kit generate migration from schema.ts
+npm run db:push      # push schema to Supabase (requires DATABASE_URL env var)
+```
 
-## What We're Building
+## Environment Variables
 
-A mobile-first PWA for stock management, targeted at small Brazilian merchants (feirantes, revendedores). Users manage products, stock in/out, sales (cash + credit/fiado), customer debts, and get alerts for low stock and expiring items.
+```
+VITE_SUPABASE_URL=https://<projeto>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-key>
+```
 
-## Planned Tech Stack
+For `db:push`, also set `DATABASE_URL` (Supabase direct connection string — never commit this).
 
-| Concern | Technology |
-|---------|-----------|
-| Framework | React 18 + TypeScript + Vite |
-| Routing | React Router v7 |
-| UI | Tailwind CSS + shadcn/ui |
-| State | Zustand |
-| Backend/Auth | Supabase (Postgres + RLS + Auth) |
-| ORM | Drizzle ORM |
-| Forms | react-hook-form + zod |
-| Barcode | @zxing/browser |
-| Dates | date-fns |
-| Toasts | Sonner |
-| PWA | vite-plugin-pwa |
-| Testing | vitest |
-| Hosting | Vercel |
+Copy `.env.local.example` → `.env.local`.
 
 ## Architecture
 
-Four strict layers — dependencies only flow downward:
+Four strict layers — imports flow downward only:
 
 ```
-UI Layer          → React components (Tailwind + shadcn/ui)
-Application Layer → React hooks (no business logic, just connects domain ↔ UI)
-Domain Layer      → Pure TypeScript: types, entities, rules, formatters (zero external deps)
-Infrastructure    → Supabase repository implementations (Drizzle ORM)
+src/pages/          UI: React pages + components
+src/application/    Hooks + Zustand stores (no business logic)
+src/domain/         Pure TypeScript: types, rules, formatters (zero external deps)
+src/infrastructure/ Supabase repository implementations
 ```
 
-**Domain layer isolation** is a core design goal — it must remain free of React, Supabase, and browser APIs so it can be reused if the app migrates to React Native.
+### Domain layer (`src/domain/`)
+- `types.ts` — all entity interfaces and enums; all monetary values are **integers in centavos**
+- `repositories/` — interface contracts (no Supabase imports)
+- `rules/` — pure business functions (`stock.rules.ts`, `sale.rules.ts`, `credit.rules.ts`) — all unit-tested
+- `formatters/currency.ts` — only place that converts cents ↔ display; `floatToCents()` / `centsToBRL()`
 
-### Key Domain Modules (to be created)
-- `domain/types.ts` — entity interfaces
-- `domain/repositories/` — repository interface contracts (abstractions)
-- `domain/rules/` — business logic (stock, sales, credit rules)
-- `domain/formatters/` — currency and date formatters
+### Infrastructure layer (`src/infrastructure/`)
+- `supabase/client.ts` — singleton Supabase client
+- `supabase/*Repository.ts` — implement domain interfaces; each has a private `mapRow()` that converts snake_case DB columns to camelCase domain types
+- `db/schema.ts` — Drizzle table definitions (source of truth for the DB schema)
 
-### Infrastructure
-- `infrastructure/supabase/` — concrete Drizzle-based implementations of repository interfaces
+### Application layer (`src/application/`)
+- `stores/authStore.ts` — Zustand; session/user state
+- `stores/settingsStore.ts` — Zustand with `localStorage` persist; `businessName`, `lowStockThreshold`, `expirationAlertDays`
+- `hooks/useSales.ts` — **critical orchestration**: `createSale` is the only entry point that writes to `sales`, `stock_movements`, and `stock_entries`
+- `hooks/useAuth.ts` — exports both `useAuthListener()` (call once in App) and `useAuth()` for components
+- `hooks/useBarcode.ts` — wraps `@zxing/browser`; always call `stopScan()` on component unmount
 
-## Commands (once project is scaffolded)
+### Routing
+- `src/router/index.tsx` — React Router v7 `createBrowserRouter`
+- `src/components/layout/ProtectedRoute.tsx` — redirects to `/login` if no session
+- `src/components/layout/AppShell.tsx` — bottom nav + `<Outlet />`; all authenticated pages render inside this
 
-```bash
-npm run dev        # start dev server
-npm run build      # production build
-npm run test       # run vitest
-npm run test:watch # vitest in watch mode
-```
+## Key Technical Rules
 
-## Critical Technical Decisions
+- **All monetary values are integers (centavos).** Never use floats for money. Only `src/domain/formatters/currency.ts` converts for display.
+- **`useSales.createSale`** is the single write path for stock decrements. No component should write to `stock_entries` directly.
+- **RLS is the security layer.** Row Level Security policies in Supabase control data access. JS filters are not the security boundary.
+- **Camera streams must be cleaned up.** Every component using `useBarcode.startScan()` must call `stopScan()` on unmount.
+- **`z.coerce.number()` + zodResolver requires `as any` cast** (known zod v4 / react-hook-form v7 type compatibility issue). Use `z.output<typeof schema>` for the form type alias.
+- **`erasableSyntaxOnly` is disabled** to allow class parameter properties (`private readonly` in constructors).
 
-- **Prices as integers (centavos)** — never use floats for monetary values. `R$ 12,99` = `1299`.
-- **Cloud-first for MVP** — no offline support in v1.0 (simpler architecture).
-- **Supabase RLS** — all data access is gated by Row Level Security at the DB level; each user only sees their own data.
-- **Immutable stock movements** — `stock_movements` is an append-only audit log; current stock is derived from `stock_entries`.
-- **No backend code** — Supabase provides Auth + REST API; the app is a static SPA deployed to Vercel.
+## Database Schema
 
-## Database Schema Overview
+Drizzle schema is at `src/infrastructure/db/schema.ts`. Tables: `user_profiles`, `products`, `stock_entries` (one row per product), `stock_movements` (append-only audit log), `customers`, `sales`, `credit_payments`. RLS must be applied manually after migration (see PRD section 4 for SQL).
 
-Core tables: `users`, `products`, `stock_entries`, `stock_movements` (immutable log), `sales`, `customers`, `credit_payments`.
+Debt balance is always derived: `calcDebtBalance(creditSales, payments)` from `credit.rules.ts` — never stored.
 
-Full schema with RLS policies is documented in `stock-app-prd-tech.md` section 4.
+## PRD
+
+Full product requirements and data model: `stock-app-prd-tech.md`.
