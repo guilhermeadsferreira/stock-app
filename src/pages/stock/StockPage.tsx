@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, ScanLine } from 'lucide-react'
 import { useProducts } from '@/application/hooks/useProducts'
 import { useStock } from '@/application/hooks/useStock'
 import { useSettingsStore } from '@/application/stores/settingsStore'
@@ -33,10 +33,16 @@ export function StockPage() {
     <div className="space-y-4 px-5 pt-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Estoque</h1>
-        <Button size="sm" onClick={() => navigate('/stock/new')} className="rounded-xl gap-1.5">
-          <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-          Novo
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => navigate('/stock/scan')} className="rounded-xl gap-1.5">
+            <ScanLine className="h-3.5 w-3.5" strokeWidth={2.5} />
+            Scan
+          </Button>
+          <Button size="sm" onClick={() => navigate('/stock/new')} className="rounded-xl gap-1.5">
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+            Novo
+          </Button>
+        </div>
       </div>
 
       <div className="relative">

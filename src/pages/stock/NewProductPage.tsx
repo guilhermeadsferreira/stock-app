@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -24,13 +24,14 @@ type FormValues = z.output<typeof schema>
 
 export function NewProductPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { create } = useProducts()
   const [scanning, setScanning] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    defaultValues: { name: '', barcode: '', purchasePrice: 0, salePrice: 0, expirationDate: '', quantity: 0 },
+    defaultValues: { name: '', barcode: searchParams.get('barcode') ?? '', purchasePrice: 0, salePrice: 0, expirationDate: '', quantity: 0 },
   })
 
   async function onSubmit(values: FormValues) {

@@ -6,6 +6,8 @@ Planeje a execução da task indicada abaixo.
 
 **IMPORTANTE: Entre no modo Plan antes de fazer qualquer coisa.**
 
+**REGRA ABSOLUTA: O papel deste comando é APENAS planejar. Nunca inicie implementação, crie arquivos de código, edite arquivos do projeto ou execute comandos de build/teste durante o planejamento. A execução só acontece se o usuário pedir de forma imperativa e explícita após ver o plano (ex: "implemente agora", "pode executar", "faz aí"). Dúvida? Não implemente.**
+
 ---
 
 ## 1. Localizar a task
@@ -58,7 +60,7 @@ O plano deve incluir:
 - Etapa final: criar `docs/adrs/ADR-NNN-titulo-descritivo.md`
 - Marcar task como `Status: concluído` e mover para `tasks/done/`
 
-**Após apresentar o plano:** perguntar se o usuário quer que a pesquisa e a escrita do ADR sejam feitas imediatamente.
+**Após apresentar o plano:** aguarde. Não inicie nada. Só prossiga se o usuário pedir explicitamente.
 
 ---
 
@@ -83,7 +85,7 @@ O plano deve incluir:
 
 **Riscos e pontos de atenção.**
 
-**Após apresentar o plano:** perguntar se o usuário quer iniciar a implementação imediatamente ou prefere revisar o plano primeiro.
+**Após apresentar o plano:** aguarde. Não inicie nada. Só prossiga se o usuário pedir explicitamente.
 
 ---
 
@@ -95,7 +97,7 @@ O plano deve incluir:
 - Entregável: relatório inline ou arquivo em `docs/`
 - Se houver correções, listar como etapas separadas pós-auditoria
 
-**Após apresentar o plano:** perguntar se o usuário quer executar a auditoria imediatamente.
+**Após apresentar o plano:** aguarde. Não inicie nada. Só prossiga se o usuário pedir explicitamente.
 
 ---
 
@@ -106,7 +108,7 @@ O plano segue o formato padrão (visão geral → etapas → riscos), adaptado a
 - `produto` → atualização no `stock-app-prd-tech.md` ou novo documento em `docs/product/`
 - `infra` → configuração de Supabase, Vercel, variáveis de ambiente, schema migrations via Drizzle
 
-**Após apresentar o plano:** perguntar se o usuário quer prosseguir.
+**Após apresentar o plano:** aguarde. Não inicie nada. Só prossiga se o usuário pedir explicitamente.
 
 ---
 

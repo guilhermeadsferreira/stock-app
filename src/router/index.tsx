@@ -7,6 +7,7 @@ import { SignUpPage } from '@/pages/auth/SignUpPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { StockPage } from '@/pages/stock/StockPage'
 import { NewProductPage } from '@/pages/stock/NewProductPage'
+import { StockScanPage } from '@/pages/stock/StockScanPage'
 import { ProductDetailPage } from '@/pages/stock/ProductDetailPage'
 import { NewSalePage } from '@/pages/sales/NewSalePage'
 import { CreditPage } from '@/pages/credit/CreditPage'
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'stock', element: <StockPage /> },
+      { path: 'stock/scan', element: <StockScanPage /> },
       { path: 'stock/new', element: <NewProductPage /> },
       { path: 'stock/:productId', element: <ProductDetailPage /> },
       { path: 'sales/new', element: <NewSalePage /> },
