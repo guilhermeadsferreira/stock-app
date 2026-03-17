@@ -34,7 +34,8 @@ function getPeriodRange(period: Period): { from: Date; to: Date } {
 
 export interface ReportData {
   stockValue: number
-  cashSalesTotal: number
+  allSalesTotal: number    // todas as vendas do período (à vista + fiado)
+  cashSalesTotal: number   // só à vista — usado em ReportsPage
   openCreditTotal: number
   openCreditCustomerCount: number
   lowStockProducts: Product[]
@@ -55,10 +56,11 @@ export function useReports() {
     try {
       const { from, to } = getPeriodRange(period)
 
-      const [products, entries, cashSales, customers] = await Promise.all([
+      const [products, entries, cashSales, allSales, customers] = await Promise.all([
         productRepo.list(user.id),
         stockRepo.listEntries(user.id),
         saleRepo.listByUser(user.id, { paymentType: 'cash', from, to }),
+        saleRepo.listByUser(user.id, { from, to }),
         customerRepo.list(user.id),
       ])
 
@@ -80,6 +82,7 @@ export function useReports() {
 
       const stockValue = calcStockValue(products, entries)
       const cashSalesTotal = cashSales.reduce((sum, s) => sum + s.totalPrice, 0)
+      const allSalesTotal = allSales.reduce((sum, s) => sum + s.totalPrice, 0)
 
       const lowStockProducts = products.filter(p => {
         const qty = entryMap.get(p.id)?.quantity ?? 0
@@ -92,6 +95,7 @@ export function useReports() {
 
       setData({
         stockValue,
+        allSalesTotal,
         cashSalesTotal,
         openCreditTotal,
         openCreditCustomerCount,

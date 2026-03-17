@@ -102,12 +102,13 @@ export function HomePage() {
         <SummaryCard
           icon={<TrendingUp className="h-4 w-4 text-emerald-600" strokeWidth={1.75} />}
           label="Vendas hoje"
-          value={loading ? null : centsToBRL(data?.cashSalesTotal ?? 0)}
+          value={loading ? null : centsToBRL(data?.allSalesTotal ?? 0)}
+          onClick={() => navigate('/sales?period=today')}
         />
       </div>
 
       {/* Card de fiado */}
-      <button onClick={() => navigate('/credit')} className="w-full text-left">
+      <button onClick={() => navigate('/customers')} className="w-full text-left">
         <div className="rounded-2xl bg-[#1e3a8a] p-5 transition-opacity active:opacity-90">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -139,9 +140,9 @@ export function HomePage() {
   )
 }
 
-function SummaryCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | null }) {
-  return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+function SummaryCard({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: string | null; onClick?: () => void }) {
+  const inner = (
+    <>
       <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
         {icon}
         <p className="text-xs font-medium leading-tight">{label}</p>
@@ -150,6 +151,14 @@ function SummaryCard({ icon, label, value }: { icon: React.ReactNode; label: str
         ? <Skeleton className="h-7 w-3/4" />
         : <p className="text-2xl font-bold text-foreground leading-none tracking-tight">{value}</p>
       }
-    </div>
+    </>
   )
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="rounded-2xl bg-card p-4 shadow-sm text-left active:scale-[0.98] transition-transform w-full">
+        {inner}
+      </button>
+    )
+  }
+  return <div className="rounded-2xl bg-card p-4 shadow-sm">{inner}</div>
 }

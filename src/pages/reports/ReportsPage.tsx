@@ -61,7 +61,7 @@ export function ReportsPage() {
 
       {/* Fiado em aberto */}
       <button
-        onClick={() => navigate('/credit')}
+        onClick={() => navigate('/customers')}
         className="w-full rounded-2xl bg-[#1e3a8a] p-5 text-left transition-opacity active:opacity-90"
       >
         <p className="text-sm font-medium text-blue-200 mb-3">Fiado em aberto</p>

@@ -1,6 +1,6 @@
 # Product Status — StockApp
 
-> Última atualização: 2026-03-16 (rev 7)
+> Última atualização: 2026-03-16 (rev 8)
 
 ## Estado Geral
 
@@ -64,8 +64,11 @@
 
 ### Relatórios / Home
 - [x] Valor total em estoque (custo)
-- [x] Vendas à vista por período (hoje / semana / mês)
+- [x] Vendas por período (hoje / semana / mês) — à vista + fiado
+- [x] Tela de lista de vendas (`/sales`) com chips de período, resumo e detalhe por item
+- [x] Card "Vendas hoje" na Home clicável → navega para lista do dia
 - [x] Total de fiado em aberto (valor + contagem de clientes)
+- [x] fix: "Vendas hoje" agora inclui vendas fiado (antes só contava à vista)
 - [x] Alertas: produtos com estoque baixo (banner + lista com badge na Home)
 - [x] Alertas: produtos perto do vencimento (banner + lista com badge na Home)
 - [x] Dialog de confirmação ao clicar em produto sem estoque na listagem (redireciona para detalhe)
