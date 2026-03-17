@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, TrendingUp, Package, Users, Settings, Clock } from 'lucide-react'
+import { TrendingUp, Package, Users, Settings, Clock, ChevronRight } from 'lucide-react'
 import { useReports } from '@/application/hooks/useReports'
 import { useSettingsStore } from '@/application/stores/settingsStore'
 import { centsToBRL } from '@/domain/formatters/currency'
@@ -35,43 +35,15 @@ export function HomePage() {
         </button>
       </div>
 
-      {/* Alertas */}
-      {!loading && data && (
-        <div className="space-y-2">
-          {data.lowStockProducts.length > 0 && (
-            <button
-              onClick={() => navigate('/stock?filter=low')}
-              className="flex w-full items-center gap-3 rounded-2xl border-l-[3px] border-amber-400 bg-amber-50 px-4 py-3 text-left transition-colors active:bg-amber-100"
-            >
-              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-600" />
-              <span className="text-sm font-medium text-amber-900">
-                {data.lowStockProducts.length} produto{data.lowStockProducts.length > 1 ? 's' : ''} com estoque baixo
-              </span>
-            </button>
-          )}
-          {data.nearExpiryProducts.length > 0 && (
-            <button
-              onClick={() => navigate('/stock?filter=expiring')}
-              className="flex w-full items-center gap-3 rounded-2xl border-l-[3px] border-red-400 bg-red-50 px-4 py-3 text-left transition-colors active:bg-red-100"
-            >
-              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-600" />
-              <span className="text-sm font-medium text-red-900">
-                {data.nearExpiryProducts.length} produto{data.nearExpiryProducts.length > 1 ? 's' : ''} próximo{data.nearExpiryProducts.length > 1 ? 's' : ''} ao vencimento
-              </span>
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Lista estoque baixo — só exibe quando há muitos itens (> 5) */}
-      {!loading && data && data.lowStockProducts.length > 5 && (
+      {/* Lista estoque baixo */}
+      {!loading && data && data.lowStockProducts.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
             <Package className="h-4 w-4" />
             Estoque baixo
           </div>
           <div className="space-y-1.5">
-            {data.lowStockProducts.map(p => {
+            {data.lowStockProducts.slice(0, 5).map(p => {
               const qty = data.stockEntries.find(e => e.productId === p.id)?.quantity ?? 0
               return (
                 <div key={p.id} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5">
@@ -81,24 +53,42 @@ export function HomePage() {
               )
             })}
           </div>
+          {data.lowStockProducts.length > 5 && (
+            <button
+              onClick={() => navigate('/stock?filter=low')}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 py-2 text-sm font-medium text-amber-700 active:bg-amber-100"
+            >
+              Ver todos ({data.lowStockProducts.length})
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
 
-      {/* Lista próximos ao vencimento — só exibe quando há muitos itens (> 5) */}
-      {!loading && data && data.nearExpiryProducts.length > 5 && (
+      {/* Lista próximos ao vencimento */}
+      {!loading && data && data.nearExpiryProducts.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-red-700">
             <Clock className="h-4 w-4" />
             Próximos ao vencimento
           </div>
           <div className="space-y-1.5">
-            {data.nearExpiryProducts.map(p => (
+            {data.nearExpiryProducts.slice(0, 5).map(p => (
               <div key={p.id} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5">
                 <span className="text-sm font-medium">{p.name}</span>
                 <ExpiryBadge expirationDate={p.expirationDate} alertDays={expirationAlertDays} />
               </div>
             ))}
           </div>
+          {data.nearExpiryProducts.length > 5 && (
+            <button
+              onClick={() => navigate('/stock?filter=expiring')}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 py-2 text-sm font-medium text-red-700 active:bg-red-100"
+            >
+              Ver todos ({data.nearExpiryProducts.length})
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
 
