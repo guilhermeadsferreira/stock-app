@@ -24,8 +24,6 @@ export function SignUpPage() {
   const navigate = useNavigate()
   const { signUp } = useAuth()
   const [submitting, setSubmitting] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-  const [registeredEmail, setRegisteredEmail] = useState('')
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -36,39 +34,13 @@ export function SignUpPage() {
     setSubmitting(true)
     try {
       await signUp(values.email, values.password)
-      setRegisteredEmail(values.email)
-      setEmailSent(true)
+      toast.success('Conta criada com sucesso!')
+      navigate('/login')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro ao criar conta')
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (emailSent) {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-sm space-y-6 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
-            <span className="text-2xl">✉️</span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Confirme seu email</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Enviamos um link de confirmação para{' '}
-              <span className="font-medium text-foreground">{registeredEmail}</span>.
-              Clique no link antes de fazer login.
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Não recebeu? Verifique a pasta de spam.
-            </p>
-          </div>
-          <Button className="w-full" onClick={() => navigate('/login')}>
-            Ir para o login
-          </Button>
-        </div>
-      </div>
-    )
   }
 
   return (
