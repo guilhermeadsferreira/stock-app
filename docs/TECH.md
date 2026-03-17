@@ -1,6 +1,6 @@
 # Documentação Técnica — StockApp
 
-> Última atualização: 2026-03-16 (rev 2)
+> Última atualização: 2026-03-16 (rev 5)
 
 ## Stack
 
@@ -54,17 +54,20 @@ Núcleo da aplicação — zero dependência de framework ou banco.
 - **`supabase/*Repository.ts`** — implementam as interfaces do domain; cada um tem `mapRow()` privado (snake_case DB → camelCase domain)
 - **`supabase/StockRepository.ts`** — método `deleteEntry` remove a linha de `stock_entries` (os `stock_movements` são mantidos por serem append-only)
 - **`supabase/SaleRepository.ts`** — método `hasProductSales` (count query) verifica se existem vendas para um produto antes da exclusão
+- **`supabase/CreditRepository.ts`** — `listAllPayments(userId)` retorna todos os pagamentos do usuário (usado na listagem de clientes para calcular saldos sem N+1 queries)
 - **`db/schema.ts`** — Drizzle: fonte da verdade do schema DB
 
 ### Application (`src/application/`)
 
 - **`stores/authStore.ts`** — sessão e usuário via Zustand
 - **`stores/settingsStore.ts`** — Zustand com persist no `localStorage` (`businessName`, `lowStockThreshold`, `expirationAlertDays`)
-- **`hooks/useSales.ts`** — **orquestrador crítico**: única entrada de escrita em `sales`, `stock_movements` e `stock_entries`
+- **`hooks/useSales.ts`** — **orquestrador crítico**: única entrada de escrita em `sales`, `stock_movements` e `stock_entries`; `createSalesBatch` cria múltiplas vendas com pré-validação (fase 1: valida tudo sem escrever; fase 2: grava sequencialmente)
 - **`hooks/useBarcode.ts`** — sempre chamar `stopScan()` no unmount do componente
 - **`hooks/useStock.ts`** — expõe `replenish` (incremento + movimento `purchase`), `adjustQuantity` (ajuste exato + movimento `adjustment`) e `removeEntry` (deleta `stock_entry`)
 - **`hooks/useProducts.ts`** — `remove` verifica `hasProductSales` antes de deletar; lança erro se houver vendas vinculadas
 - **`hooks/useReports.ts`** — `ReportData` expõe `stockEntries[]` além das listas de alertas
+- **`hooks/useCredit.ts`** — `loadCustomerCredit`, `registerPayment`, `balance` (derivado); `registerPayment` não valida teto máximo — validação feita na UI (`CustomerDetailPage`)
+- **`hooks/useCustomers.ts`** — `load(search?)`, `create`, `update`
 
 ### Pages (`src/pages/`)
 
@@ -84,8 +87,10 @@ Consomem hooks e stores. Validação de formulários via Zod + react-hook-form.
 | `/stock/scan` | StockScanPage | Autenticada |
 | `/stock/:productId` | ProductDetailPage | Autenticada |
 | `/sales/new` | NewSalePage | Autenticada |
-| `/credit` | CreditPage | Autenticada |
-| `/credit/:customerId` | CustomerDetailPage | Autenticada |
+| `/customers` | CustomersPage | Autenticada |
+| `/customers/:customerId` | CustomerDetailPage | Autenticada |
+| `/credit` | → redirect `/customers` | — |
+| `/credit/:customerId` | → redirect `/customers` | — |
 | `/reports` | ReportsPage | Autenticada |
 | `/settings` | SettingsPage | Autenticada |
 

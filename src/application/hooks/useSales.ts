@@ -4,7 +4,7 @@ import { SaleRepository } from '@/infrastructure/supabase/SaleRepository'
 import { StockRepository } from '@/infrastructure/supabase/StockRepository'
 import { useAuthStore } from '@/application/stores/authStore'
 import { calcSaleTotal, validateSale } from '@/domain/rules/sale.rules'
-import type { Sale, Product, PaymentType } from '@/domain/types'
+import type { Sale, Product, PaymentType, CartItem } from '@/domain/types'
 import type { SaleFilters } from '@/domain/repositories/ISaleRepository'
 
 const saleRepo = new SaleRepository(supabase)
@@ -83,5 +83,57 @@ export function useSales() {
     return sale
   }, [user])
 
-  return { sales, loading, load, createSale }
+  /**
+   * Cria múltiplas vendas de uma vez (carrinho).
+   * Fase 1: valida todos os itens sem escrever nada.
+   * Fase 2: grava sequencialmente só se tudo passou.
+   * Produtos duplicados no carrinho têm estoques somados na validação.
+   */
+  const createSalesBatch = useCallback(async (
+    items: CartItem[],
+    paymentType: PaymentType,
+    customerId: string | null,
+  ): Promise<void> => {
+    if (!user) throw new Error('Não autenticado')
+
+    // Fase 1 — pré-validação: agrupa qtd por produto para checar estoque real
+    const qtyByProduct = new Map<string, number>()
+    for (const item of items) {
+      qtyByProduct.set(item.product.id, (qtyByProduct.get(item.product.id) ?? 0) + item.quantity)
+    }
+
+    for (const [productId, totalQty] of qtyByProduct) {
+      const product = items.find(i => i.product.id === productId)!.product
+      const entry = await stockRepo.getEntry(user.id, productId)
+      const currentQty = entry?.quantity ?? 0
+      const validation = validateSale(product, totalQty, currentQty, paymentType, customerId)
+      if (!validation.valid) throw new Error(validation.error)
+    }
+
+    // Fase 2 — escrita sequencial
+    for (const item of items) {
+      const totalPrice = calcSaleTotal(item.quantity, item.unitPrice)
+      const sale = await saleRepo.create({
+        userId: user.id,
+        productId: item.product.id,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice,
+        purchasePriceSnapshot: item.product.purchasePrice,
+        paymentType,
+        customerId,
+      })
+      await stockRepo.addMovement({
+        userId: user.id,
+        productId: item.product.id,
+        type: 'out',
+        reason: 'sale',
+        quantity: item.quantity,
+        saleId: sale.id,
+      })
+      await stockRepo.decrementEntry(user.id, item.product.id, item.quantity)
+    }
+  }, [user])
+
+  return { sales, loading, load, createSale, createSalesBatch }
 }

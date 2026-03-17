@@ -11,6 +11,8 @@ import { ExpiryBadge } from '@/components/stock/ExpiryBadge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import type { Product } from '@/domain/types'
 import { cn } from '@/lib/utils'
 
 type StockFilter = 'all' | 'low' | 'expiring' | 'expired'
@@ -24,6 +26,7 @@ export function StockPage() {
   const { lowStockThreshold, expirationAlertDays } = useSettingsStore()
 
   const activeFilter = (searchParams.get('filter') as StockFilter) ?? 'all'
+  const [pendingProduct, setPendingProduct] = useState<Product | null>(null)
 
   useEffect(() => {
     load()
@@ -115,7 +118,13 @@ export function StockPage() {
           {filtered.map(product => (
             <button
               key={product.id}
-              onClick={() => navigate(`/stock/${product.id}`)}
+              onClick={() => {
+                if ((entryMap.get(product.id) ?? 0) === 0) {
+                  setPendingProduct(product)
+                } else {
+                  navigate(`/stock/${product.id}`)
+                }
+              }}
               className="flex w-full items-center justify-between rounded-2xl bg-card px-4 py-3.5 text-left shadow-sm active:scale-[0.99] active:shadow-none transition-all duration-150"
             >
               <div>
@@ -136,6 +145,23 @@ export function StockPage() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={pendingProduct !== null} onOpenChange={open => { if (!open) setPendingProduct(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Produto sem estoque</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{pendingProduct?.name}</strong> está sem estoque. Deseja adicionar agora?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingProduct(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { navigate(`/stock/${pendingProduct!.id}`); setPendingProduct(null) }}>
+              Adicionar estoque
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

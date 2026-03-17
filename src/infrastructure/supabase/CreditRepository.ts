@@ -42,4 +42,13 @@ export class CreditRepository implements ICreditRepository {
     if (error || !data) return []
     return data.map(mapRow)
   }
+
+  async listAllPayments(userId: string): Promise<CreditPayment[]> {
+    const { data, error } = await this.client
+      .from('credit_payments')
+      .select('*')
+      .eq('user_id', userId)
+    if (error || !data) return []
+    return data.map(mapRow)
+  }
 }

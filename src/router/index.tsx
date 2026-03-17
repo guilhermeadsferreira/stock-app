@@ -10,8 +10,9 @@ import { NewProductPage } from '@/pages/stock/NewProductPage'
 import { StockScanPage } from '@/pages/stock/StockScanPage'
 import { ProductDetailPage } from '@/pages/stock/ProductDetailPage'
 import { NewSalePage } from '@/pages/sales/NewSalePage'
-import { CreditPage } from '@/pages/credit/CreditPage'
-import { CustomerDetailPage } from '@/pages/credit/CustomerDetailPage'
+import { CustomersPage } from '@/pages/customers/CustomersPage'
+import { CustomerDetailPage } from '@/pages/customers/CustomerDetailPage'
+import { Navigate } from 'react-router-dom'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 
@@ -38,8 +39,10 @@ export const router = createBrowserRouter([
       { path: 'stock/new', element: <NewProductPage /> },
       { path: 'stock/:productId', element: <ProductDetailPage /> },
       { path: 'sales/new', element: <NewSalePage /> },
-      { path: 'credit', element: <CreditPage /> },
-      { path: 'credit/:customerId', element: <CustomerDetailPage /> },
+      { path: 'customers', element: <CustomersPage /> },
+      { path: 'customers/:customerId', element: <CustomerDetailPage /> },
+      { path: 'credit', element: <Navigate to="/customers" replace /> },
+      { path: 'credit/:customerId', element: <Navigate to="/customers" replace /> },
       { path: 'reports', element: <ReportsPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],

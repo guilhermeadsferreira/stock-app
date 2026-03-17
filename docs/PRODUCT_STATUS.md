@@ -1,6 +1,6 @@
 # Product Status — StockApp
 
-> Última atualização: 2026-03-16 (rev 2)
+> Última atualização: 2026-03-16 (rev 7)
 
 ## Estado Geral
 
@@ -30,18 +30,30 @@
 - [ ] Edição de produto (hook existe, UI não implementada)
 
 ### Vendas
-- [x] Fluxo multi-step: produto → quantidade/preço → pagamento → cliente → confirmação
+- [x] Fluxo multi-step com carrinho: pagamento → cliente (fiado) → adicionar itens → revisar carrinho → confirmação
+- [x] Múltiplos produtos por venda — cada item gera um registro `Sale` independente (sem alterar schema)
+- [x] Pré-validação de estoque de todos os itens antes de qualquer escrita (`createSalesBatch`)
+- [x] Busca de produto com debounce automático (400ms) — sem necessidade de Enter ou botão
 - [x] Scanner de código de barras no fluxo de venda
 - [x] Pagamento à vista (dinheiro)
 - [x] Pagamento a prazo (fiado) com vínculo ao cliente
+- [x] Cadastro de cliente inline no fluxo de venda fiada (dialog + auto-seleção + avanço automático)
+- [x] Busca de cliente com debounce (400ms) no step de seleção
 - [x] Log de movimentação de estoque gerado automaticamente
 - [x] Decremento atômico de estoque na venda
 
-### Fiado (Crédito)
-- [x] Listagem de clientes com saldo devedor aberto
-- [x] Histórico por cliente (vendas + pagamentos interleaved)
+### Clientes & Fiado
+- [x] Listagem de clientes (todos) com aba "Fiado em aberto" — substitui a antiga CreditPage
+- [x] Badge de saldo devedor na listagem (calculado sem N+1 queries)
+- [x] Busca de cliente com debounce (300ms)
+- [x] Cadastro de cliente inline via dialog (nome + telefone)
+- [x] Detalhe do cliente: saldo devedor, formulário de pagamento, histórico interleaved
+- [x] Validação de pagamento — bloqueia valor acima do saldo devedor
+- [x] Toast diferenciado ao quitar dívida ("Dívida quitada!")
 - [x] Registro de pagamento com observação
 - [x] Saldo derivado (nunca armazenado — calculado em runtime)
+- [ ] Edição de cliente (hook existe, UI não implementada)
+- [ ] Exclusão de cliente (hook não implementado)
 
 ### Estoque
 - [x] Controle de quantidade por produto
@@ -56,6 +68,7 @@
 - [x] Total de fiado em aberto (valor + contagem de clientes)
 - [x] Alertas: produtos com estoque baixo (banner + lista com badge na Home)
 - [x] Alertas: produtos perto do vencimento (banner + lista com badge na Home)
+- [x] Dialog de confirmação ao clicar em produto sem estoque na listagem (redireciona para detalhe)
 - [ ] Exportação CSV/PDF
 - [ ] Relatório de rentabilidade por produto
 

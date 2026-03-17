@@ -75,6 +75,13 @@ export interface Sale {
   createdAt: Date
 }
 
+// Tipo local (não persiste no banco) — usado no fluxo de venda com múltiplos itens
+export interface CartItem {
+  product: Product
+  quantity: number
+  unitPrice: number  // centavos
+}
+
 export interface CreditPayment {
   id: string
   userId: string
