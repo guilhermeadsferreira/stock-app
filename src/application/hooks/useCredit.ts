@@ -10,25 +10,25 @@ const creditRepo = new CreditRepository(supabase)
 const saleRepo = new SaleRepository(supabase)
 
 export function useCredit() {
-  const { user } = useAuthStore()
+  const { currentBusiness } = useAuthStore()
   const [payments, setPayments] = useState<CreditPayment[]>([])
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(false)
 
   const loadCustomerCredit = useCallback(async (customerId: string) => {
-    if (!user) return
+    if (!currentBusiness) return
     setLoading(true)
     try {
       const [fetchedSales, fetchedPayments] = await Promise.all([
-        saleRepo.listByUser(user.id, { paymentType: 'credit', customerId }),
-        creditRepo.listPaymentsByCustomer(user.id, customerId),
+        saleRepo.listByBusiness(currentBusiness.id, { paymentType: 'credit', customerId }),
+        creditRepo.listPaymentsByCustomer(currentBusiness.id, customerId),
       ])
       setSales(fetchedSales)
       setPayments(fetchedPayments)
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [currentBusiness])
 
   const getBalance = useCallback((customerSales: Sale[], customerPayments: CreditPayment[]) => {
     return calcDebtBalance(customerSales, customerPayments)
@@ -39,14 +39,14 @@ export function useCredit() {
     amount: number,
     notes?: string,
   ): Promise<CreditPayment> => {
-    if (!user) throw new Error('Não autenticado')
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
     return creditRepo.createPayment({
-      userId: user.id,
+      businessId: currentBusiness.id,
       customerId,
       amount,
       notes: notes ?? null,
     })
-  }, [user])
+  }, [currentBusiness])
 
   const balance = calcDebtBalance(sales, payments)
 

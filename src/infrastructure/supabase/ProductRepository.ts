@@ -6,7 +6,7 @@ import type { Product } from '@/domain/types'
 function mapRow(row: any): Product {
   return {
     id: row.id,
-    userId: row.user_id,
+    businessId: row.business_id,
     name: row.name,
     barcode: row.barcode ?? null,
     purchasePrice: row.purchase_price,
@@ -18,35 +18,35 @@ function mapRow(row: any): Product {
 }
 
 export class ProductRepository implements IProductRepository {
-  constructor(private readonly client: SupabaseClient<any, any, any>) {}
+  constructor(private readonly client: SupabaseClient<any, any, any>) {} // eslint-disable-line @typescript-eslint/no-explicit-any
 
-  async findById(userId: string, productId: string): Promise<Product | null> {
+  async findById(businessId: string, productId: string): Promise<Product | null> {
     const { data, error } = await this.client
       .from('products')
       .select('*')
       .eq('id', productId)
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .single()
     if (error || !data) return null
     return mapRow(data)
   }
 
-  async findByBarcode(userId: string, barcode: string): Promise<Product | null> {
+  async findByBarcode(businessId: string, barcode: string): Promise<Product | null> {
     const { data, error } = await this.client
       .from('products')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('barcode', barcode)
       .single()
     if (error || !data) return null
     return mapRow(data)
   }
 
-  async list(userId: string, filters?: ProductFilters): Promise<Product[]> {
+  async list(businessId: string, filters?: ProductFilters): Promise<Product[]> {
     let query = this.client
       .from('products')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .order('name', { ascending: true })
 
     if (filters?.search) {
@@ -62,7 +62,7 @@ export class ProductRepository implements IProductRepository {
     const { data, error } = await this.client
       .from('products')
       .insert({
-        user_id: product.userId,
+        business_id: product.businessId,
         name: product.name,
         barcode: product.barcode,
         purchase_price: product.purchasePrice,
@@ -76,9 +76,9 @@ export class ProductRepository implements IProductRepository {
   }
 
   async update(
-    userId: string,
+    businessId: string,
     productId: string,
-    data: Partial<Omit<Product, 'id' | 'userId' | 'createdAt'>>,
+    data: Partial<Omit<Product, 'id' | 'businessId' | 'createdAt'>>,
   ): Promise<Product> {
     const updateData: Record<string, unknown> = {}
     if (data.name !== undefined) updateData.name = data.name
@@ -92,19 +92,19 @@ export class ProductRepository implements IProductRepository {
       .from('products')
       .update(updateData)
       .eq('id', productId)
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .select()
       .single()
     if (error || !row) throw new Error(error?.message ?? 'Erro ao atualizar produto')
     return mapRow(row)
   }
 
-  async delete(userId: string, productId: string): Promise<void> {
+  async delete(businessId: string, productId: string): Promise<void> {
     const { error } = await this.client
       .from('products')
       .delete()
       .eq('id', productId)
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
     if (error) throw new Error(error.message)
   }
 }

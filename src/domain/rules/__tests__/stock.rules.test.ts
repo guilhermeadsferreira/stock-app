@@ -10,7 +10,7 @@ import type { Product, StockEntry } from '@/domain/types'
 
 const makeProduct = (overrides: Partial<Product> = {}): Product => ({
   id: 'p1',
-  userId: 'u1',
+  businessId: 'b1',
   name: 'Produto Teste',
   barcode: null,
   purchasePrice: 1000,
@@ -23,7 +23,7 @@ const makeProduct = (overrides: Partial<Product> = {}): Product => ({
 
 const makeEntry = (productId: string, quantity: number): StockEntry => ({
   id: 'e1',
-  userId: 'u1',
+  businessId: 'b1',
   productId,
   quantity,
   updatedAt: new Date(),

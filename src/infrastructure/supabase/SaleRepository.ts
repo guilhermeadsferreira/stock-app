@@ -6,7 +6,7 @@ import type { Sale } from '@/domain/types'
 function mapRow(row: any): Sale {
   return {
     id: row.id,
-    userId: row.user_id,
+    businessId: row.business_id,
     productId: row.product_id,
     quantity: row.quantity,
     unitPrice: row.unit_price,
@@ -19,13 +19,13 @@ function mapRow(row: any): Sale {
 }
 
 export class SaleRepository implements ISaleRepository {
-  constructor(private readonly client: SupabaseClient<any, any, any>) {}
+  constructor(private readonly client: SupabaseClient<any, any, any>) {} // eslint-disable-line @typescript-eslint/no-explicit-any
 
   async create(sale: Omit<Sale, 'id' | 'createdAt'>): Promise<Sale> {
     const { data, error } = await this.client
       .from('sales')
       .insert({
-        user_id: sale.userId,
+        business_id: sale.businessId,
         product_id: sale.productId,
         quantity: sale.quantity,
         unit_price: sale.unitPrice,
@@ -40,21 +40,21 @@ export class SaleRepository implements ISaleRepository {
     return mapRow(data)
   }
 
-  async hasProductSales(userId: string, productId: string): Promise<boolean> {
+  async hasProductSales(businessId: string, productId: string): Promise<boolean> {
     const { count, error } = await this.client
       .from('sales')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('product_id', productId)
     if (error) return false
     return (count ?? 0) > 0
   }
 
-  async listByUser(userId: string, filters?: SaleFilters): Promise<Sale[]> {
+  async listByBusiness(businessId: string, filters?: SaleFilters): Promise<Sale[]> {
     let query = this.client
       .from('sales')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .order('created_at', { ascending: false })
 
     if (filters?.paymentType) {

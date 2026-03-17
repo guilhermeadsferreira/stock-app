@@ -6,7 +6,7 @@ import type { Customer } from '@/domain/types'
 function mapRow(row: any): Customer {
   return {
     id: row.id,
-    userId: row.user_id,
+    businessId: row.business_id,
     name: row.name,
     phone: row.phone ?? null,
     createdAt: new Date(row.created_at),
@@ -14,24 +14,24 @@ function mapRow(row: any): Customer {
 }
 
 export class CustomerRepository implements ICustomerRepository {
-  constructor(private readonly client: SupabaseClient<any, any, any>) {}
+  constructor(private readonly client: SupabaseClient<any, any, any>) {} // eslint-disable-line @typescript-eslint/no-explicit-any
 
-  async findById(userId: string, customerId: string): Promise<Customer | null> {
+  async findById(businessId: string, customerId: string): Promise<Customer | null> {
     const { data, error } = await this.client
       .from('customers')
       .select('*')
       .eq('id', customerId)
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .single()
     if (error || !data) return null
     return mapRow(data)
   }
 
-  async list(userId: string, search?: string): Promise<Customer[]> {
+  async list(businessId: string, search?: string): Promise<Customer[]> {
     let query = this.client
       .from('customers')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .order('name', { ascending: true })
 
     if (search) {
@@ -47,7 +47,7 @@ export class CustomerRepository implements ICustomerRepository {
     const { data, error } = await this.client
       .from('customers')
       .insert({
-        user_id: customer.userId,
+        business_id: customer.businessId,
         name: customer.name,
         phone: customer.phone,
       })
@@ -58,9 +58,9 @@ export class CustomerRepository implements ICustomerRepository {
   }
 
   async update(
-    userId: string,
+    businessId: string,
     customerId: string,
-    updates: Partial<Omit<Customer, 'id' | 'userId' | 'createdAt'>>,
+    updates: Partial<Omit<Customer, 'id' | 'businessId' | 'createdAt'>>,
   ): Promise<Customer> {
     const updateData: Record<string, unknown> = {}
     if (updates.name !== undefined) updateData.name = updates.name
@@ -70,7 +70,7 @@ export class CustomerRepository implements ICustomerRepository {
       .from('customers')
       .update(updateData)
       .eq('id', customerId)
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .select()
       .single()
     if (error || !data) throw new Error(error?.message ?? 'Erro ao atualizar cliente')

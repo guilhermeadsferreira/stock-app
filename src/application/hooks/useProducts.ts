@@ -12,35 +12,35 @@ const stockRepo = new StockRepository(supabase)
 const saleRepo = new SaleRepository(supabase)
 
 export function useProducts() {
-  const { user } = useAuthStore()
+  const { currentBusiness } = useAuthStore()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async (filters?: ProductFilters) => {
-    if (!user) return
+    if (!currentBusiness) return
     setLoading(true)
     setError(null)
     try {
-      const data = await productRepo.list(user.id, filters)
+      const data = await productRepo.list(currentBusiness.id, filters)
       setProducts(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar produtos')
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [currentBusiness])
 
   const create = useCallback(async (
-    product: Omit<Product, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
+    product: Omit<Product, 'id' | 'businessId' | 'createdAt' | 'updatedAt'>,
     initialQuantity: number,
   ) => {
-    if (!user) throw new Error('Não autenticado')
-    const created = await productRepo.create({ ...product, userId: user.id })
-    await stockRepo.upsertEntry(user.id, created.id, initialQuantity)
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
+    const created = await productRepo.create({ ...product, businessId: currentBusiness.id })
+    await stockRepo.upsertEntry(currentBusiness.id, created.id, initialQuantity)
     if (initialQuantity > 0) {
       await stockRepo.addMovement({
-        userId: user.id,
+        businessId: currentBusiness.id,
         productId: created.id,
         type: 'in',
         reason: 'purchase',
@@ -48,27 +48,27 @@ export function useProducts() {
       })
     }
     return created
-  }, [user])
+  }, [currentBusiness])
 
   const update = useCallback(async (
     productId: string,
-    data: Partial<Omit<Product, 'id' | 'userId' | 'createdAt'>>,
+    data: Partial<Omit<Product, 'id' | 'businessId' | 'createdAt'>>,
   ) => {
-    if (!user) throw new Error('Não autenticado')
-    return productRepo.update(user.id, productId, data)
-  }, [user])
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
+    return productRepo.update(currentBusiness.id, productId, data)
+  }, [currentBusiness])
 
   const remove = useCallback(async (productId: string) => {
-    if (!user) throw new Error('Não autenticado')
-    const hasSales = await saleRepo.hasProductSales(user.id, productId)
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
+    const hasSales = await saleRepo.hasProductSales(currentBusiness.id, productId)
     if (hasSales) throw new Error('Este produto possui vendas registradas e não pode ser excluído.')
-    await productRepo.delete(user.id, productId)
-  }, [user])
+    await productRepo.delete(currentBusiness.id, productId)
+  }, [currentBusiness])
 
   const findByBarcode = useCallback(async (barcode: string) => {
-    if (!user) return null
-    return productRepo.findByBarcode(user.id, barcode)
-  }, [user])
+    if (!currentBusiness) return null
+    return productRepo.findByBarcode(currentBusiness.id, barcode)
+  }, [currentBusiness])
 
   return { products, loading, error, load, create, update, remove, findByBarcode }
 }

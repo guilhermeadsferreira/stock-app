@@ -21,20 +21,20 @@ interface CustomerWithBalance extends Customer {
 
 export function CreditPage() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { currentBusiness } = useAuthStore()
   const [customersWithBalance, setCustomersWithBalance] = useState<CustomerWithBalance[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
+    if (!currentBusiness) return
     async function load() {
-      if (!user) return
-      const customers = await customerRepo.list(user.id)
+      if (!currentBusiness) return
+      const customers = await customerRepo.list(currentBusiness.id)
       const withBalances = await Promise.all(
         customers.map(async (c) => {
           const [sales, payments] = await Promise.all([
-            saleRepo.listByUser(user.id, { paymentType: 'credit', customerId: c.id }),
-            creditRepo.listPaymentsByCustomer(user.id, c.id),
+            saleRepo.listByBusiness(currentBusiness.id, { paymentType: 'credit', customerId: c.id }),
+            creditRepo.listPaymentsByCustomer(currentBusiness.id, c.id),
           ])
           return { ...c, balance: calcDebtBalance(sales, payments) }
         }),
@@ -43,7 +43,7 @@ export function CreditPage() {
       setLoading(false)
     }
     load()
-  }, [user])
+  }, [currentBusiness])
 
   const totalCredit = customersWithBalance.reduce((sum, c) => sum + c.balance, 0)
 

@@ -13,18 +13,32 @@ export type PaymentType = 'cash' | 'credit'
 
 // ─── Entities ────────────────────────────────────────────────────────────────
 
+export interface Business {
+  id: string
+  name: string
+  ownerId: string
+  inviteCode: string
+  lowStockThreshold: number
+  expirationAlertDays: number
+  createdAt: Date
+}
+
+export interface BusinessMember {
+  id: string
+  email: string
+  isOwner: boolean
+}
+
 export interface UserProfile {
   id: string
   email: string
-  businessName: string
-  lowStockThreshold: number   // qty padrão para alerta
-  expirationAlertDays: number // dias antes do vencimento para alertar
+  businessId: string | null
   createdAt: Date
 }
 
 export interface Product {
   id: string
-  userId: string
+  businessId: string
   name: string
   barcode: string | null
   purchasePrice: number  // centavos
@@ -36,7 +50,7 @@ export interface Product {
 
 export interface StockEntry {
   id: string
-  userId: string
+  businessId: string
   productId: string
   quantity: number
   updatedAt: Date
@@ -44,7 +58,7 @@ export interface StockEntry {
 
 export interface StockMovement {
   id: string
-  userId: string
+  businessId: string
   productId: string
   type: MovementType
   reason: MovementReason
@@ -56,7 +70,7 @@ export interface StockMovement {
 
 export interface Customer {
   id: string
-  userId: string
+  businessId: string
   name: string
   phone: string | null
   createdAt: Date
@@ -64,7 +78,7 @@ export interface Customer {
 
 export interface Sale {
   id: string
-  userId: string
+  businessId: string
   productId: string
   quantity: number
   unitPrice: number               // centavos — preço cobrado no momento
@@ -84,7 +98,7 @@ export interface CartItem {
 
 export interface CreditPayment {
   id: string
-  userId: string
+  businessId: string
   customerId: string
   amount: number  // centavos
   notes: string | null

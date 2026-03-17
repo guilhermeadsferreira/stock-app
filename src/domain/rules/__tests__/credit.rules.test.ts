@@ -4,7 +4,7 @@ import type { Sale, CreditPayment } from '@/domain/types'
 
 const makeSale = (totalPrice: number, customerId = 'c1'): Sale => ({
   id: crypto.randomUUID(),
-  userId: 'u1',
+  businessId: 'b1',
   productId: 'p1',
   quantity: 1,
   unitPrice: totalPrice,
@@ -17,7 +17,7 @@ const makeSale = (totalPrice: number, customerId = 'c1'): Sale => ({
 
 const makePayment = (amount: number): CreditPayment => ({
   id: crypto.randomUUID(),
-  userId: 'u1',
+  businessId: 'b1',
   customerId: 'c1',
   amount,
   notes: null,

@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useSettingsStore } from '@/application/stores/settingsStore'
+import { useAuthStore } from '@/application/stores/authStore'
 import type { Product, Customer, CartItem } from '@/domain/types'
 
 type Step = 'payment' | 'customer' | 'add-item' | 'cart' | 'confirm'
@@ -35,7 +35,8 @@ type ItemForm = z.output<typeof itemSchema>
 
 export function NewSalePage() {
   const navigate = useNavigate()
-  const { lowStockThreshold } = useSettingsStore()
+  const { currentBusiness } = useAuthStore()
+  const lowStockThreshold = currentBusiness?.lowStockThreshold ?? 5
   const { findByBarcode, products, load: loadProducts } = useProducts()
   const { getEntry } = useStock()
   const { customers, load: loadCustomers, create: createCustomer } = useCustomers()

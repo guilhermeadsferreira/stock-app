@@ -4,7 +4,7 @@ import type { Product } from '@/domain/types'
 
 const makeProduct = (overrides: Partial<Product> = {}): Product => ({
   id: 'p1',
-  userId: 'u1',
+  businessId: 'b1',
   name: 'Produto',
   barcode: null,
   purchasePrice: 800,

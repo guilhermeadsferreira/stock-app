@@ -6,7 +6,7 @@ import type { StockEntry, StockMovement } from '@/domain/types'
 function mapEntry(row: any): StockEntry {
   return {
     id: row.id,
-    userId: row.user_id,
+    businessId: row.business_id,
     productId: row.product_id,
     quantity: row.quantity,
     updatedAt: new Date(row.updated_at),
@@ -17,7 +17,7 @@ function mapEntry(row: any): StockEntry {
 function mapMovement(row: any): StockMovement {
   return {
     id: row.id,
-    userId: row.user_id,
+    businessId: row.business_id,
     productId: row.product_id,
     type: row.type,
     reason: row.reason,
@@ -29,33 +29,33 @@ function mapMovement(row: any): StockMovement {
 }
 
 export class StockRepository implements IStockRepository {
-  constructor(private readonly client: SupabaseClient<any, any, any>) {}
+  constructor(private readonly client: SupabaseClient<any, any, any>) {} // eslint-disable-line @typescript-eslint/no-explicit-any
 
-  async getEntry(userId: string, productId: string): Promise<StockEntry | null> {
+  async getEntry(businessId: string, productId: string): Promise<StockEntry | null> {
     const { data, error } = await this.client
       .from('stock_entries')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('product_id', productId)
       .single()
     if (error || !data) return null
     return mapEntry(data)
   }
 
-  async listEntries(userId: string): Promise<StockEntry[]> {
+  async listEntries(businessId: string): Promise<StockEntry[]> {
     const { data, error } = await this.client
       .from('stock_entries')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
     if (error || !data) return []
     return data.map(mapEntry)
   }
 
-  async upsertEntry(userId: string, productId: string, quantity: number): Promise<StockEntry> {
+  async upsertEntry(businessId: string, productId: string, quantity: number): Promise<StockEntry> {
     const { data, error } = await this.client
       .from('stock_entries')
       .upsert(
-        { user_id: userId, product_id: productId, quantity, updated_at: new Date().toISOString() },
+        { business_id: businessId, product_id: productId, quantity, updated_at: new Date().toISOString() },
         { onConflict: 'product_id' },
       )
       .select()
@@ -64,23 +64,23 @@ export class StockRepository implements IStockRepository {
     return mapEntry(data)
   }
 
-  async incrementEntry(userId: string, productId: string, quantity: number): Promise<StockEntry> {
-    const current = await this.getEntry(userId, productId)
+  async incrementEntry(businessId: string, productId: string, quantity: number): Promise<StockEntry> {
+    const current = await this.getEntry(businessId, productId)
     const newQty = (current?.quantity ?? 0) + quantity
-    return this.upsertEntry(userId, productId, newQty)
+    return this.upsertEntry(businessId, productId, newQty)
   }
 
-  async decrementEntry(userId: string, productId: string, quantity: number): Promise<StockEntry> {
-    const current = await this.getEntry(userId, productId)
+  async decrementEntry(businessId: string, productId: string, quantity: number): Promise<StockEntry> {
+    const current = await this.getEntry(businessId, productId)
     const newQty = Math.max(0, (current?.quantity ?? 0) - quantity)
-    return this.upsertEntry(userId, productId, newQty)
+    return this.upsertEntry(businessId, productId, newQty)
   }
 
   async addMovement(input: AddMovementInput): Promise<StockMovement> {
     const { data, error } = await this.client
       .from('stock_movements')
       .insert({
-        user_id: input.userId,
+        business_id: input.businessId,
         product_id: input.productId,
         type: input.type,
         reason: input.reason,
@@ -94,20 +94,20 @@ export class StockRepository implements IStockRepository {
     return mapMovement(data)
   }
 
-  async deleteEntry(userId: string, productId: string): Promise<void> {
+  async deleteEntry(businessId: string, productId: string): Promise<void> {
     const { error } = await this.client
       .from('stock_entries')
       .delete()
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('product_id', productId)
     if (error) throw new Error(error.message)
   }
 
-  async listMovements(userId: string, productId: string): Promise<StockMovement[]> {
+  async listMovements(businessId: string, productId: string): Promise<StockMovement[]> {
     const { data, error } = await this.client
       .from('stock_movements')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('product_id', productId)
       .order('created_at', { ascending: false })
     if (error || !data) return []

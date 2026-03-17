@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, ScanLine } from 'lucide-react'
 import { useProducts } from '@/application/hooks/useProducts'
 import { useStock } from '@/application/hooks/useStock'
-import { useSettingsStore } from '@/application/stores/settingsStore'
+import { useAuthStore } from '@/application/stores/authStore'
 import { centsToBRL } from '@/domain/formatters/currency'
 import { isLowStock, isNearExpiry, isExpired } from '@/domain/rules/stock.rules'
 import { StockBadge } from '@/components/stock/StockBadge'
@@ -23,7 +23,9 @@ export function StockPage() {
   const [search, setSearch] = useState('')
   const { products, loading, load } = useProducts()
   const { entries, loadEntries } = useStock()
-  const { lowStockThreshold, expirationAlertDays } = useSettingsStore()
+  const { currentBusiness } = useAuthStore()
+  const lowStockThreshold = currentBusiness?.lowStockThreshold ?? 5
+  const expirationAlertDays = currentBusiness?.expirationAlertDays ?? 7
 
   const activeFilter = (searchParams.get('filter') as StockFilter) ?? 'all'
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null)

@@ -19,29 +19,29 @@ export interface CreateSaleInput {
 }
 
 export function useSales() {
-  const { user } = useAuthStore()
+  const { currentBusiness } = useAuthStore()
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(false)
 
   const load = useCallback(async (filters?: SaleFilters) => {
-    if (!user) return
+    if (!currentBusiness) return
     setLoading(true)
     try {
-      const data = await saleRepo.listByUser(user.id, filters)
+      const data = await saleRepo.listByBusiness(currentBusiness.id, filters)
       setSales(data)
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [currentBusiness])
 
   /**
    * Ponto central de criação de vendas.
    * Executa sequencialmente: insert sale → insert movement → decrement stock.
    */
   const createSale = useCallback(async (input: CreateSaleInput): Promise<Sale> => {
-    if (!user) throw new Error('Não autenticado')
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
 
-    const currentEntry = await stockRepo.getEntry(user.id, input.product.id)
+    const currentEntry = await stockRepo.getEntry(currentBusiness.id, input.product.id)
     const currentQty = currentEntry?.quantity ?? 0
 
     const validation = validateSale(
@@ -57,7 +57,7 @@ export function useSales() {
 
     // 1. Registra a venda
     const sale = await saleRepo.create({
-      userId: user.id,
+      businessId: currentBusiness.id,
       productId: input.product.id,
       quantity: input.quantity,
       unitPrice: input.unitPrice,
@@ -69,7 +69,7 @@ export function useSales() {
 
     // 2. Registra a movimentação de saída
     await stockRepo.addMovement({
-      userId: user.id,
+      businessId: currentBusiness.id,
       productId: input.product.id,
       type: 'out',
       reason: 'sale',
@@ -78,10 +78,10 @@ export function useSales() {
     })
 
     // 3. Decrementa o estoque
-    await stockRepo.decrementEntry(user.id, input.product.id, input.quantity)
+    await stockRepo.decrementEntry(currentBusiness.id, input.product.id, input.quantity)
 
     return sale
-  }, [user])
+  }, [currentBusiness])
 
   /**
    * Cria múltiplas vendas de uma vez (carrinho).
@@ -94,7 +94,7 @@ export function useSales() {
     paymentType: PaymentType,
     customerId: string | null,
   ): Promise<void> => {
-    if (!user) throw new Error('Não autenticado')
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
 
     // Fase 1 — pré-validação: agrupa qtd por produto para checar estoque real
     const qtyByProduct = new Map<string, number>()
@@ -104,7 +104,7 @@ export function useSales() {
 
     for (const [productId, totalQty] of qtyByProduct) {
       const product = items.find(i => i.product.id === productId)!.product
-      const entry = await stockRepo.getEntry(user.id, productId)
+      const entry = await stockRepo.getEntry(currentBusiness.id, productId)
       const currentQty = entry?.quantity ?? 0
       const validation = validateSale(product, totalQty, currentQty, paymentType, customerId)
       if (!validation.valid) throw new Error(validation.error)
@@ -114,7 +114,7 @@ export function useSales() {
     for (const item of items) {
       const totalPrice = calcSaleTotal(item.quantity, item.unitPrice)
       const sale = await saleRepo.create({
-        userId: user.id,
+        businessId: currentBusiness.id,
         productId: item.product.id,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
@@ -124,16 +124,16 @@ export function useSales() {
         customerId,
       })
       await stockRepo.addMovement({
-        userId: user.id,
+        businessId: currentBusiness.id,
         productId: item.product.id,
         type: 'out',
         reason: 'sale',
         quantity: item.quantity,
         saleId: sale.id,
       })
-      await stockRepo.decrementEntry(user.id, item.product.id, item.quantity)
+      await stockRepo.decrementEntry(currentBusiness.id, item.product.id, item.quantity)
     }
-  }, [user])
+  }, [currentBusiness])
 
   return { sales, loading, load, createSale, createSalesBatch }
 }

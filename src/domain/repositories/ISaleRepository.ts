@@ -9,6 +9,6 @@ export interface SaleFilters {
 
 export interface ISaleRepository {
   create(sale: Omit<Sale, 'id' | 'createdAt'>): Promise<Sale>
-  listByUser(userId: string, filters?: SaleFilters): Promise<Sale[]>
-  hasProductSales(userId: string, productId: string): Promise<boolean>
+  listByBusiness(businessId: string, filters?: SaleFilters): Promise<Sale[]>
+  hasProductSales(businessId: string, productId: string): Promise<boolean>
 }

@@ -6,7 +6,6 @@ import { StockRepository } from '@/infrastructure/supabase/StockRepository'
 import { CustomerRepository } from '@/infrastructure/supabase/CustomerRepository'
 import { CreditRepository } from '@/infrastructure/supabase/CreditRepository'
 import { useAuthStore } from '@/application/stores/authStore'
-import { useSettingsStore } from '@/application/stores/settingsStore'
 import { calcStockValue, isLowStock, isNearExpiry } from '@/domain/rules/stock.rules'
 import { calcDebtBalance } from '@/domain/rules/credit.rules'
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
@@ -46,23 +45,22 @@ export interface ReportData {
 }
 
 export function useReports() {
-  const { user } = useAuthStore()
-  const { lowStockThreshold, expirationAlertDays } = useSettingsStore()
+  const { currentBusiness } = useAuthStore()
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(false)
 
   const load = useCallback(async (period: Period = 'today') => {
-    if (!user) return
+    if (!currentBusiness) return
     setLoading(true)
     try {
       const { from, to } = getPeriodRange(period)
 
       const [products, entries, cashSales, allSales, customers] = await Promise.all([
-        productRepo.list(user.id),
-        stockRepo.listEntries(user.id),
-        saleRepo.listByUser(user.id, { paymentType: 'cash', from, to }),
-        saleRepo.listByUser(user.id, { from, to }),
-        customerRepo.list(user.id),
+        productRepo.list(currentBusiness.id),
+        stockRepo.listEntries(currentBusiness.id),
+        saleRepo.listByBusiness(currentBusiness.id, { paymentType: 'cash', from, to }),
+        saleRepo.listByBusiness(currentBusiness.id, { from, to }),
+        customerRepo.list(currentBusiness.id),
       ])
 
       const entryMap = new Map<string, StockEntry>(entries.map(e => [e.productId, e]))
@@ -71,8 +69,8 @@ export function useReports() {
       const customerCreditData = await Promise.all(
         customers.map(async (c: Customer) => {
           const [creditSales, payments] = await Promise.all([
-            saleRepo.listByUser(user.id, { paymentType: 'credit', customerId: c.id }),
-            creditRepo.listPaymentsByCustomer(user.id, c.id),
+            saleRepo.listByBusiness(currentBusiness.id, { paymentType: 'credit', customerId: c.id }),
+            creditRepo.listPaymentsByCustomer(currentBusiness.id, c.id),
           ])
           return calcDebtBalance(creditSales, payments)
         }),
@@ -88,11 +86,11 @@ export function useReports() {
 
       const lowStockProducts = products.filter(p => {
         const qty = entryMap.get(p.id)?.quantity ?? 0
-        return isLowStock(qty, lowStockThreshold)
+        return isLowStock(qty, currentBusiness.lowStockThreshold)
       })
 
       const nearExpiryProducts = products.filter(p =>
-        p.expirationDate && isNearExpiry(p.expirationDate, expirationAlertDays),
+        p.expirationDate && isNearExpiry(p.expirationDate, currentBusiness.expirationAlertDays),
       )
 
       setData({
@@ -110,7 +108,7 @@ export function useReports() {
     } finally {
       setLoading(false)
     }
-  }, [user, lowStockThreshold, expirationAlertDays])
+  }, [currentBusiness])
 
   return { data, loading, load }
 }

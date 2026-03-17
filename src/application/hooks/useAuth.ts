@@ -1,23 +1,45 @@
 import { useEffect } from 'react'
 import { supabase } from '@/infrastructure/supabase/client'
+import { BusinessRepository } from '@/infrastructure/supabase/BusinessRepository'
 import { useAuthStore } from '@/application/stores/authStore'
+import type { Business } from '@/domain/types'
+
+const businessRepo = new BusinessRepository(supabase)
+
+async function loadBusinessForUser(userId: string): Promise<Business | null> {
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('business_id')
+    .eq('id', userId)
+    .single()
+  if (!profile?.business_id) return null
+  return businessRepo.findById(profile.business_id)
+}
 
 export function useAuthListener() {
-  const { setAuth, setLoading } = useAuthStore()
+  const { setAuth, setLoading, setCurrentBusiness } = useAuthStore()
 
   useEffect(() => {
-    // Lê a sessão atual
-    supabase.auth.getSession().then(({ data }) => {
-      setAuth(data.session?.user ?? null, data.session ?? null)
-    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user ?? null
+      setAuth(user, session)
 
-    // Escuta mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuth(session?.user ?? null, session ?? null)
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        if (user) {
+          const business = await loadBusinessForUser(user.id)
+          setCurrentBusiness(business)
+        } else {
+          setCurrentBusiness(null)
+        }
+        setLoading(false)
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentBusiness(null)
+        setLoading(false)
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [setAuth, setLoading])
+  }, [setAuth, setLoading, setCurrentBusiness])
 }
 
 export function useAuth() {

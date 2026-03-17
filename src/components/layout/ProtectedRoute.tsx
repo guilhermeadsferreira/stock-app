@@ -6,7 +6,7 @@ interface Props {
 }
 
 export function ProtectedRoute({ children }: Props) {
-  const { session, isLoading } = useAuthStore()
+  const { session, currentBusiness, isLoading } = useAuthStore()
 
   if (isLoading) {
     return (
@@ -18,6 +18,10 @@ export function ProtectedRoute({ children }: Props) {
 
   if (!session) {
     return <Navigate to="/login" replace />
+  }
+
+  if (!currentBusiness) {
+    return <Navigate to="/onboarding" replace />
   }
 
   return <>{children}</>

@@ -6,7 +6,7 @@ import type { CreditPayment } from '@/domain/types'
 function mapRow(row: any): CreditPayment {
   return {
     id: row.id,
-    userId: row.user_id,
+    businessId: row.business_id,
     customerId: row.customer_id,
     amount: row.amount,
     notes: row.notes ?? null,
@@ -15,13 +15,13 @@ function mapRow(row: any): CreditPayment {
 }
 
 export class CreditRepository implements ICreditRepository {
-  constructor(private readonly client: SupabaseClient<any, any, any>) {}
+  constructor(private readonly client: SupabaseClient<any, any, any>) {} // eslint-disable-line @typescript-eslint/no-explicit-any
 
   async createPayment(payment: Omit<CreditPayment, 'id' | 'createdAt'>): Promise<CreditPayment> {
     const { data, error } = await this.client
       .from('credit_payments')
       .insert({
-        user_id: payment.userId,
+        business_id: payment.businessId,
         customer_id: payment.customerId,
         amount: payment.amount,
         notes: payment.notes,
@@ -32,22 +32,22 @@ export class CreditRepository implements ICreditRepository {
     return mapRow(data)
   }
 
-  async listPaymentsByCustomer(userId: string, customerId: string): Promise<CreditPayment[]> {
+  async listPaymentsByCustomer(businessId: string, customerId: string): Promise<CreditPayment[]> {
     const { data, error } = await this.client
       .from('credit_payments')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false })
     if (error || !data) return []
     return data.map(mapRow)
   }
 
-  async listAllPayments(userId: string): Promise<CreditPayment[]> {
+  async listAllPayments(businessId: string): Promise<CreditPayment[]> {
     const { data, error } = await this.client
       .from('credit_payments')
       .select('*')
-      .eq('user_id', userId)
+      .eq('business_id', businessId)
     if (error || !data) return []
     return data.map(mapRow)
   }

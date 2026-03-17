@@ -1,7 +1,7 @@
 import type { StockEntry, StockMovement, MovementType, MovementReason } from '@/domain/types'
 
 export interface AddMovementInput {
-  userId: string
+  businessId: string
   productId: string
   type: MovementType
   reason: MovementReason
@@ -11,12 +11,12 @@ export interface AddMovementInput {
 }
 
 export interface IStockRepository {
-  getEntry(userId: string, productId: string): Promise<StockEntry | null>
-  listEntries(userId: string): Promise<StockEntry[]>
-  upsertEntry(userId: string, productId: string, quantity: number): Promise<StockEntry>
-  incrementEntry(userId: string, productId: string, quantity: number): Promise<StockEntry>
-  decrementEntry(userId: string, productId: string, quantity: number): Promise<StockEntry>
+  getEntry(businessId: string, productId: string): Promise<StockEntry | null>
+  listEntries(businessId: string): Promise<StockEntry[]>
+  upsertEntry(businessId: string, productId: string, quantity: number): Promise<StockEntry>
+  incrementEntry(businessId: string, productId: string, quantity: number): Promise<StockEntry>
+  decrementEntry(businessId: string, productId: string, quantity: number): Promise<StockEntry>
   addMovement(input: AddMovementInput): Promise<StockMovement>
-  listMovements(userId: string, productId: string): Promise<StockMovement[]>
-  deleteEntry(userId: string, productId: string): Promise<void>
+  listMovements(businessId: string, productId: string): Promise<StockMovement[]>
+  deleteEntry(businessId: string, productId: string): Promise<void>
 }

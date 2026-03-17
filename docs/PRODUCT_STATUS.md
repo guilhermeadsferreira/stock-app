@@ -1,10 +1,10 @@
 # Product Status — StockApp
 
-> Última atualização: 2026-03-17 (rev 10)
+> Última atualização: 2026-03-17 (rev 11)
 
 ## Estado Geral
 
-**Fase:** MVP funcional — pronto para uso real por usuário único
+**Fase:** MVP funcional — suporte a multi-usuário (2 membros por empresa)
 **Estabilidade:** Beta (infraestrutura de produção ainda não validada em produção)
 
 ---
@@ -77,11 +77,17 @@
 - [ ] Exportação CSV/PDF
 - [ ] Relatório de rentabilidade por produto
 
+### Multi-usuário
+- [x] Tenant `businesses` desacopla usuário dos dados
+- [x] Onboarding: criar empresa ou entrar via código de convite (8 chars)
+- [x] Máximo 2 membros por empresa; terceiro recebe erro "empresa cheia"
+- [x] Seção Membros em Configurações: exibir/copiar código, gerar novo código, listar membros, remover membro (dono)
+
 ### Configurações
 - [x] Nome do negócio
 - [x] Limiar de estoque baixo (qtd)
 - [x] Dias de antecedência para alerta de vencimento
-- [x] Persistência local (localStorage) + Supabase
+- [x] Persistência via tabela `businesses` (compartilhada entre membros)
 
 ### Clientes
 - [x] Cadastro de cliente (nome, telefone)
@@ -104,7 +110,7 @@
 ### Baixa prioridade / futuro
 7. Exportação de relatórios (CSV/PDF)
 8. Notificações push (estoque baixo, vencimento)
-9. Múltiplos usuários / planos
+9. ~~Múltiplos usuários / planos~~ — implementado (2 membros por empresa)
 10. Import em lote de produtos (CSV)
 11. Fotos de produto
 12. Conciliação de inventário físico

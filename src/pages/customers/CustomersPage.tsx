@@ -39,7 +39,7 @@ type Tab = 'all' | 'credit'
 
 export function CustomersPage() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { currentBusiness } = useAuthStore()
   const { create } = useCustomers()
 
   const [tab, setTab] = useState<Tab>('all')
@@ -54,21 +54,21 @@ export function CustomersPage() {
   const form = useForm<NewCustomerForm>({ resolver: zodResolver(newCustomerSchema) as any })
 
   useEffect(() => {
-    if (!user) return
+    if (!currentBusiness) return
     async function load() {
-      if (!user) return
+      if (!currentBusiness) return
       setLoading(true)
       try {
         const [customers, allSales, allPayments] = await Promise.all([
-          customerRepo.list(user.id),
-          saleRepo.listByUser(user.id, { paymentType: 'credit' }),
-          creditRepo.listAllPayments(user.id),
+          customerRepo.list(currentBusiness.id),
+          saleRepo.listByBusiness(currentBusiness.id, { paymentType: 'credit' }),
+          creditRepo.listAllPayments(currentBusiness.id),
         ])
         const withBalances: CustomerWithBalance[] = customers.map(c => ({
           ...c,
           balance: calcDebtBalance(
-            allSales.filter(s => s.customerId === c.id),
-            allPayments.filter(p => p.customerId === c.id),
+            allSales.filter((s) => s.customerId === c.id),
+            allPayments.filter((p) => p.customerId === c.id),
           ),
         }))
         setAllCustomers(withBalances)
@@ -77,7 +77,7 @@ export function CustomersPage() {
       }
     }
     load()
-  }, [user])
+  }, [currentBusiness])
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 

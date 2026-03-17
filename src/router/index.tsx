@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { SignUpPage } from '@/pages/auth/SignUpPage'
+import { OnboardingPage } from '@/pages/onboarding/OnboardingPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { StockPage } from '@/pages/stock/StockPage'
 import { NewProductPage } from '@/pages/stock/NewProductPage'
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignUpPage />,
+  },
+  {
+    path: '/onboarding',
+    element: <OnboardingPage />,
   },
   {
     path: '/',

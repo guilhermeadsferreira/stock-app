@@ -9,10 +9,10 @@ export interface ProductFilters {
 }
 
 export interface IProductRepository {
-  findById(userId: string, productId: string): Promise<Product | null>
-  findByBarcode(userId: string, barcode: string): Promise<Product | null>
-  list(userId: string, filters?: ProductFilters): Promise<Product[]>
+  findById(businessId: string, productId: string): Promise<Product | null>
+  findByBarcode(businessId: string, barcode: string): Promise<Product | null>
+  list(businessId: string, filters?: ProductFilters): Promise<Product[]>
   create(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product>
-  update(userId: string, productId: string, data: Partial<Omit<Product, 'id' | 'userId' | 'createdAt'>>): Promise<Product>
-  delete(userId: string, productId: string): Promise<void>
+  update(businessId: string, productId: string, data: Partial<Omit<Product, 'id' | 'businessId' | 'createdAt'>>): Promise<Product>
+  delete(businessId: string, productId: string): Promise<void>
 }

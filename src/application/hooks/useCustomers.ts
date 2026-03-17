@@ -7,36 +7,36 @@ import type { Customer } from '@/domain/types'
 const customerRepo = new CustomerRepository(supabase)
 
 export function useCustomers() {
-  const { user } = useAuthStore()
+  const { currentBusiness } = useAuthStore()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
 
   const load = useCallback(async (search?: string) => {
-    if (!user) return
+    if (!currentBusiness) return
     setLoading(true)
     try {
-      const data = await customerRepo.list(user.id, search)
+      const data = await customerRepo.list(currentBusiness.id, search)
       setCustomers(data)
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [currentBusiness])
 
   const create = useCallback(async (
     name: string,
     phone?: string,
   ): Promise<Customer> => {
-    if (!user) throw new Error('Não autenticado')
-    return customerRepo.create({ userId: user.id, name, phone: phone ?? null })
-  }, [user])
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
+    return customerRepo.create({ businessId: currentBusiness.id, name, phone: phone ?? null })
+  }, [currentBusiness])
 
   const update = useCallback(async (
     customerId: string,
     data: { name?: string; phone?: string },
   ): Promise<Customer> => {
-    if (!user) throw new Error('Não autenticado')
-    return customerRepo.update(user.id, customerId, data)
-  }, [user])
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
+    return customerRepo.update(currentBusiness.id, customerId, data)
+  }, [currentBusiness])
 
   return { customers, loading, load, create, update }
 }

@@ -1,6 +1,6 @@
 # Documentação Técnica — StockApp
 
-> Última atualização: 2026-03-17 (rev 8)
+> Última atualização: 2026-03-17 (rev 9)
 
 ## Stack
 
@@ -59,9 +59,10 @@ Núcleo da aplicação — zero dependência de framework ou banco.
 
 ### Application (`src/application/`)
 
-- **`stores/authStore.ts`** — sessão e usuário via Zustand
-- **`stores/settingsStore.ts`** — Zustand com persist no `localStorage` (`businessName`, `lowStockThreshold`, `expirationAlertDays`)
+- **`stores/authStore.ts`** — sessão, usuário e empresa atual (`currentBusiness: Business | null`) via Zustand. `isLoading` só é resolvido para `false` após carregar a empresa no `onAuthStateChange`.
+- **`stores/settingsStore.ts`** — stub vazio; configurações migradas para `businesses`
 - **`hooks/useSales.ts`** — **orquestrador crítico**: única entrada de escrita em `sales`, `stock_movements` e `stock_entries`; `createSalesBatch` cria múltiplas vendas com pré-validação (fase 1: valida tudo sem escrever; fase 2: grava sequencialmente)
+- **`hooks/useBusiness.ts`** — `createBusiness`, `joinByCode`, `removeMember`, `getInviteCode`, `regenerateInviteCode`, `listMembers`; atualiza `currentBusiness` no authStore após cada operação
 - **`hooks/useBarcode.ts`** — sempre chamar `stopScan()` no unmount do componente
 - **`hooks/useStock.ts`** — expõe `replenish` (incremento + movimento `purchase`), `adjustQuantity` (ajuste exato + movimento `adjustment`) e `removeEntry` (deleta `stock_entry`)
 - **`hooks/useProducts.ts`** — `remove` verifica `hasProductSales` antes de deletar; lança erro se houver vendas vinculadas
@@ -81,6 +82,7 @@ Consomem hooks e stores. Validação de formulários via Zod + react-hook-form.
 |---|---|---|
 | `/login` | LoginPage | Pública |
 | `/signup` | SignUpPage | Pública |
+| `/onboarding` | OnboardingPage | Autenticada sem empresa |
 | `/` | HomePage | Autenticada |
 | `/stock` | StockPage | Autenticada |
 | `/stock/new` | NewProductPage | Autenticada |
@@ -94,7 +96,7 @@ Consomem hooks e stores. Validação de formulários via Zod + react-hook-form.
 | `/reports` | ReportsPage | Autenticada |
 | `/settings` | SettingsPage | Autenticada |
 
-`ProtectedRoute` redireciona para `/login` sem sessão. Todas as páginas autenticadas renderizam dentro de `AppShell` (bottom nav + `<Outlet />`).
+`ProtectedRoute` redireciona para `/login` sem sessão e para `/onboarding` se `currentBusiness === null`. Todas as páginas autenticadas renderizam dentro de `AppShell` (bottom nav + `<Outlet />`). `OnboardingPage` não usa `ProtectedRoute` — faz a própria verificação de sessão.
 
 ---
 
@@ -115,13 +117,16 @@ GRANT ALL ON ALL TABLES IN SCHEMA stock TO authenticated;
 
 | Tabela | Descrição |
 |---|---|
-| `user_profiles` | Configurações por usuário (PK = UUID do auth.users) |
-| `products` | Catálogo de produtos (barcode único por usuário) |
-| `stock_entries` | Quantidade em estoque (1 linha por produto) |
+| `businesses` | Empresa (tenant); tem `invite_code` (8 chars), `low_stock_threshold`, `expiration_alert_days` |
+| `user_profiles` | Perfil de usuário (PK = UUID do auth.users); tem `email`, `business_id` (FK → businesses) |
+| `products` | Catálogo de produtos (barcode único por empresa via `UNIQUE(barcode, business_id)`) |
+| `stock_entries` | Quantidade em estoque (1 linha por produto, `UNIQUE(product_id)`) |
 | `stock_movements` | Log append-only de movimentações (auditoria) |
 | `customers` | Clientes para controle de fiado |
 | `sales` | Registro de vendas (à vista e fiado) |
 | `credit_payments` | Pagamentos de dívidas de clientes |
+
+Todas as tabelas de dados usam `business_id` como chave de tenant (substituiu `user_id`).
 
 ### Regras de negócio no banco
 
@@ -129,17 +134,32 @@ GRANT ALL ON ALL TABLES IN SCHEMA stock TO authenticated;
 - `stock_movements`: append-only — nunca atualizar ou deletar
 - Saldo de dívida: **sempre derivado** via `calcDebtBalance(creditSales, payments)` — nunca armazenado
 - Valores monetários: **inteiros em centavos** em todas as colunas de preço/valor
+- `businesses.invite_code`: 8 chars alfanumérico, único; gerado em `BusinessRepository.create()`
+- `businesses`: máximo 2 membros — validado em `BusinessRepository.addMember()` antes do upsert
 
 ### RLS (Row Level Security)
 
-Todas as tabelas devem ter RLS habilitado. Policy padrão: `user_id = auth.uid()` (ou `id = auth.uid()` em `user_profiles`).
+Todas as tabelas devem ter RLS habilitado. Policy padrão para tabelas de dados:
 
 ```sql
--- Exemplo para products (replicar para todas as tabelas)
-ALTER TABLE stock.products ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "products: owner only"
-  ON stock.products FOR ALL
-  USING (user_id = auth.uid());
+-- Substitui o antigo user_id = auth.uid()
+business_id IN (
+  SELECT business_id FROM stock.user_profiles
+  WHERE id = auth.uid() AND business_id IS NOT NULL
+)
+
+-- businesses: SELECT para membros, UPDATE só para owner
+CREATE POLICY "businesses: member read"
+  ON stock.businesses FOR SELECT
+  USING (id IN (SELECT business_id FROM stock.user_profiles WHERE id = auth.uid()));
+
+CREATE POLICY "businesses: owner update"
+  ON stock.businesses FOR UPDATE
+  USING (owner_id = auth.uid());
+
+CREATE POLICY "businesses: any authenticated insert"
+  ON stock.businesses FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
 ```
 
 ---

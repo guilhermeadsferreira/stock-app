@@ -35,7 +35,7 @@ function getPeriodRange(period: Period): { from: Date; to: Date } {
 
 export function SalesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const { user } = useAuthStore()
+  const { currentBusiness } = useAuthStore()
 
   const period = (searchParams.get('period') as Period) ?? 'today'
 
@@ -45,16 +45,16 @@ export function SalesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
+    if (!currentBusiness) return
     async function load() {
-      if (!user) return
+      if (!currentBusiness) return
       setLoading(true)
       try {
         const { from, to } = getPeriodRange(period)
         const [fetchedSales, products, customers] = await Promise.all([
-          saleRepo.listByUser(user.id, { from, to }),
-          productRepo.list(user.id),
-          customerRepo.list(user.id),
+          saleRepo.listByBusiness(currentBusiness.id, { from, to }),
+          productRepo.list(currentBusiness.id),
+          customerRepo.list(currentBusiness.id),
         ])
         setSales(fetchedSales)
         setProductMap(new Map(products.map(p => [p.id, p])))
@@ -64,7 +64,7 @@ export function SalesPage() {
       }
     }
     load()
-  }, [user, period])
+  }, [currentBusiness, period])
 
   const total = sales.reduce((sum, s) => sum + s.totalPrice, 0)
   const cashTotal = sales.filter(s => s.paymentType === 'cash').reduce((sum, s) => sum + s.totalPrice, 0)

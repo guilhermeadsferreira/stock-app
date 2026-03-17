@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TrendingUp, Package, Users, Settings, Clock, ChevronRight } from 'lucide-react'
 import { useReports } from '@/application/hooks/useReports'
-import { useSettingsStore } from '@/application/stores/settingsStore'
+import { useAuthStore } from '@/application/stores/authStore'
 import { centsToBRL } from '@/domain/formatters/currency'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,10 @@ import { ExpiryBadge } from '@/components/stock/ExpiryBadge'
 
 export function HomePage() {
   const navigate = useNavigate()
-  const { businessName, lowStockThreshold, expirationAlertDays } = useSettingsStore()
+  const { currentBusiness } = useAuthStore()
+  const businessName = currentBusiness?.name ?? ''
+  const lowStockThreshold = currentBusiness?.lowStockThreshold ?? 5
+  const expirationAlertDays = currentBusiness?.expirationAlertDays ?? 7
   const { data, loading, load } = useReports()
 
   useEffect(() => { load('today') }, [load])

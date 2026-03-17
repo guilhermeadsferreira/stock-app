@@ -11,7 +11,6 @@ import { useStock } from '@/application/hooks/useStock'
 import { calcMargin, calcMarginValue } from '@/domain/rules/sale.rules'
 import { useProducts } from '@/application/hooks/useProducts'
 import { useAuthStore } from '@/application/stores/authStore'
-import { useSettingsStore } from '@/application/stores/settingsStore'
 import { centsToBRL, centsToFloat, floatToCents } from '@/domain/formatters/currency'
 import { formatDate } from '@/domain/formatters/date'
 import { StockBadge } from '@/components/stock/StockBadge'
@@ -54,8 +53,8 @@ type PriceForm = z.output<typeof priceSchema>
 export function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
-  const { user } = useAuthStore()
-  const { lowStockThreshold } = useSettingsStore()
+  const { currentBusiness } = useAuthStore()
+  const lowStockThreshold = currentBusiness?.lowStockThreshold ?? 5
   const { getEntry, replenish, adjustQuantity, removeEntry } = useStock()
   const { remove, update } = useProducts()
   const [product, setProduct] = useState<Product | null>(null)
@@ -76,9 +75,9 @@ export function ProductDetailPage() {
   const priceForm = useForm<PriceForm>({ resolver: zodResolver(priceSchema) as any })
 
   useEffect(() => {
-    if (!user || !productId) return
+    if (!currentBusiness || !productId) return
     Promise.all([
-      productRepo.findById(user.id, productId),
+      productRepo.findById(currentBusiness.id, productId),
       getEntry(productId),
     ]).then(([p, entry]) => {
       setProduct(p)
@@ -87,7 +86,7 @@ export function ProductDetailPage() {
       adjustForm.reset({ quantity: qty })
       setLoading(false)
     })
-  }, [user, productId, getEntry, adjustForm])
+  }, [currentBusiness, productId, getEntry, adjustForm])
 
   async function onRestock(values: RestockForm) {
     if (!productId) return
