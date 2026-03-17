@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and to Cursor when working with code in this repository.
+
+**Cursor:** Os fluxos equivalentes aos comandos do Claude estão em `.cursor/skills/` (git-commit, plan-task, product-review, new-task). Use-os ao pedir "commitar", "planejar a task X", "revisão de produto" ou "criar uma task".
 
 ## Living Documentation
 

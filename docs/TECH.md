@@ -1,6 +1,6 @@
 # Documentação Técnica — StockApp
 
-> Última atualização: 2026-03-16 (rev 5)
+> Última atualização: 2026-03-16 (rev 6)
 
 ## Stack
 
@@ -42,7 +42,7 @@ Núcleo da aplicação — zero dependência de framework ou banco.
 - **`repositories/`** — contratos de interface (sem import do Supabase)
 - **`rules/`** — funções puras com 100% de cobertura de testes unitários
   - `stock.rules.ts`: `isLowStock`, `isExpired`, `isNearExpiry`, `daysUntilExpiry`, `calcStockValue`
-  - `sale.rules.ts`: `validateSale`, `calcSaleTotal`
+  - `sale.rules.ts`: `validateSale`, `calcSaleTotal`, `calcMargin`, `calcMarginValue`
   - `credit.rules.ts`: `calcDebtBalance`, `isDebtSettled`
 - **`formatters/`**
   - `currency.ts`: `floatToCents()`, `centsToBRL()`, `centsToFloat()` — **único ponto** de conversão de moeda
@@ -180,6 +180,17 @@ npm run test:coverage # cobertura de testes
 npm run db:generate   # gera migration a partir do schema.ts
 npm run db:push       # aplica schema no Supabase (requer DATABASE_URL)
 ```
+
+### Skills do Cursor (workflows do agente)
+
+Workflows multi-etapa ficam em `.cursor/skills/`. O agente aplica pela descrição ou quando o usuário menciona:
+
+| Skill | Uso |
+|-------|-----|
+| `git-commit` | Commit semântico com pré-revisão; pedir "commitar", "fazer commit", "dar push" |
+| `plan-task` | Planejar execução de uma task (só planejar; implementar só se o usuário pedir depois) |
+| `product-review` | Análise de produto com persona de PM; "revisão de produto", "priorizar backlog" |
+| `new-task` | Criar nova task em `tasks/{nome}.md`; "criar task", "registrar tarefa" |
 
 ---
 

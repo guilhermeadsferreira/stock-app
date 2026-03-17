@@ -4,6 +4,24 @@ export function calcSaleTotal(quantity: number, unitPrice: number): number {
   return quantity * unitPrice
 }
 
+/**
+ * Margem de lucro em centavos: venda - custo.
+ * Negativo = venda abaixo do custo.
+ */
+export function calcMarginValue(salePrice: number, purchasePrice: number): number {
+  return salePrice - purchasePrice
+}
+
+/**
+ * Margem de lucro bruta em %: (venda - custo) / venda * 100
+ * Retorna percentual com uma casa decimal. Negativo = venda abaixo do custo.
+ * Ambos os valores em centavos.
+ */
+export function calcMargin(salePrice: number, purchasePrice: number): number {
+  if (salePrice <= 0) return 0
+  return ((salePrice - purchasePrice) / salePrice) * 100
+}
+
 export type SaleValidationError =
   | 'INSUFFICIENT_STOCK'
   | 'INVALID_QUANTITY'

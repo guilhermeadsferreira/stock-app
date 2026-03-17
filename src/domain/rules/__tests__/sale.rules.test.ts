@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcSaleTotal, validateSale } from '../sale.rules'
+import { calcSaleTotal, calcMargin, calcMarginValue, validateSale } from '../sale.rules'
 import type { Product } from '@/domain/types'
 
 const makeProduct = (overrides: Partial<Product> = {}): Product => ({
@@ -19,6 +19,25 @@ describe('calcSaleTotal', () => {
   it('multiplica quantidade pelo preço unitário', () => {
     expect(calcSaleTotal(3, 1000)).toBe(3000)
     expect(calcSaleTotal(1, 999)).toBe(999)
+  })
+})
+
+describe('calcMarginValue', () => {
+  it('retorna venda - custo em centavos', () => {
+    expect(calcMarginValue(1200, 800)).toBe(400)
+    expect(calcMarginValue(1000, 1000)).toBe(0)
+    expect(calcMarginValue(500, 600)).toBe(-100)
+  })
+})
+
+describe('calcMargin', () => {
+  it('retorna margem percentual (venda - custo) / venda * 100', () => {
+    expect(calcMargin(1200, 800)).toBeCloseTo(33.333, 1)
+    expect(calcMargin(1000, 1000)).toBe(0)
+    expect(calcMargin(500, 600)).toBe(-20)
+  })
+  it('retorna 0 quando preço de venda é 0', () => {
+    expect(calcMargin(0, 800)).toBe(0)
   })
 })
 

@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/infrastructure/supabase/client'
 import { ProductRepository } from '@/infrastructure/supabase/ProductRepository'
 import { useStock } from '@/application/hooks/useStock'
+import { calcMargin, calcMarginValue } from '@/domain/rules/sale.rules'
 import { useProducts } from '@/application/hooks/useProducts'
 import { useAuthStore } from '@/application/stores/authStore'
 import { useSettingsStore } from '@/application/stores/settingsStore'
@@ -195,7 +196,7 @@ export function ProductDetailPage() {
           <StockBadge quantity={currentQty} threshold={lowStockThreshold} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-3 gap-3 text-sm">
           <div>
             <p className="text-muted-foreground">Preço de venda</p>
             <p className="font-semibold">{centsToBRL(product.salePrice)}</p>
@@ -203,6 +204,22 @@ export function ProductDetailPage() {
           <div>
             <p className="text-muted-foreground">Custo</p>
             <p className="font-semibold">{centsToBRL(product.purchasePrice)}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Margem de lucro</p>
+            {(() => {
+              const marginValue = calcMarginValue(product.salePrice, product.purchasePrice)
+              const marginPct = calcMargin(product.salePrice, product.purchasePrice)
+              const isNegative = marginValue < 0
+              return (
+                <p className={`font-semibold ${isNegative ? 'text-destructive' : 'text-emerald-600'}`}>
+                  {centsToBRL(marginValue)}
+                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                    ({marginPct.toFixed(1)}%)
+                  </span>
+                </p>
+              )
+            })()}
           </div>
           {product.expirationDate && (
             <div>
