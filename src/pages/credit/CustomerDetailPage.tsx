@@ -101,7 +101,7 @@ export function CustomerDetailPage() {
                   <FormItem>
                     <FormLabel>Valor (R$)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0.01" inputMode="decimal" placeholder="0,00" {...field} />
+                      <Input type="number" step="0.01" min="0.01" inputMode="decimal" placeholder="0,00" onFocus={(e) => e.target.select()} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

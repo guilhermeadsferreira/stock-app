@@ -154,7 +154,7 @@ export function NewProductPage() {
               <FormItem>
                 <FormLabel>Quantidade inicial *</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" inputMode="numeric" {...field} />
+                  <Input type="number" min="0" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

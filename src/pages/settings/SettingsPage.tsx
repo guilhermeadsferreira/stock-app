@@ -64,7 +64,7 @@ export function SettingsPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Alerta de estoque baixo (quantidade)</FormLabel>
-                <FormControl><Input type="number" min="1" inputMode="numeric" {...field} /></FormControl>
+                <FormControl><Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -75,7 +75,7 @@ export function SettingsPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Alerta de vencimento (dias)</FormLabel>
-                <FormControl><Input type="number" min="1" inputMode="numeric" {...field} /></FormControl>
+                <FormControl><Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}

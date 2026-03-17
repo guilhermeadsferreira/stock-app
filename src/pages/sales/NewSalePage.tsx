@@ -172,7 +172,7 @@ export function NewSalePage() {
                     <FormItem>
                       <FormLabel>Quantidade</FormLabel>
                       <FormControl>
-                        <Input type="number" min="1" max={currentStock} inputMode="numeric" {...field} />
+                        <Input type="number" min="1" max={currentStock} inputMode="numeric" onFocus={(e) => e.target.select()} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
