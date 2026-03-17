@@ -32,10 +32,10 @@ export function ReportsPage() {
         }
       </div>
 
-      {/* Vendas à vista */}
+      {/* Total de vendas */}
       <div className="rounded-2xl bg-card p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
-          <p className="font-semibold text-[15px]">Vendas à vista</p>
+          <p className="font-semibold text-[15px]">Total de vendas</p>
           <div className="flex rounded-xl bg-muted p-0.5 gap-0.5">
             {(Object.keys(periodLabels) as Period[]).map(p => (
               <button
@@ -55,8 +55,21 @@ export function ReportsPage() {
         </div>
         {loading
           ? <Skeleton className="h-8 w-32" />
-          : <p className="text-3xl font-bold text-emerald-700 leading-none tracking-tight">{centsToBRL(data?.cashSalesTotal ?? 0)}</p>
+          : <p className="text-3xl font-bold text-emerald-700 leading-none tracking-tight">{centsToBRL(data?.allSalesTotal ?? 0)}</p>
         }
+        {/* Breakdown à vista / fiado */}
+        {!loading && (data?.allSalesTotal ?? 0) > 0 && (
+          <div className="flex gap-3 pt-1 border-t border-border/50">
+            <div className="flex-1 rounded-xl bg-muted/60 px-3 py-2.5">
+              <p className="text-[10px] font-medium text-muted-foreground mb-1">À vista</p>
+              <p className="text-sm font-bold text-green-700">{centsToBRL(data?.cashSalesTotal ?? 0)}</p>
+            </div>
+            <div className="flex-1 rounded-xl bg-muted/60 px-3 py-2.5">
+              <p className="text-[10px] font-medium text-muted-foreground mb-1">Fiado vendido</p>
+              <p className="text-sm font-bold text-blue-700">{centsToBRL(data?.creditSalesTotal ?? 0)}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Fiado em aberto */}

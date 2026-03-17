@@ -34,8 +34,9 @@ function getPeriodRange(period: Period): { from: Date; to: Date } {
 
 export interface ReportData {
   stockValue: number
-  allSalesTotal: number    // todas as vendas do período (à vista + fiado)
-  cashSalesTotal: number   // só à vista — usado em ReportsPage
+  allSalesTotal: number      // todas as vendas do período (à vista + fiado)
+  cashSalesTotal: number     // só à vista no período
+  creditSalesTotal: number   // só fiado no período (= allSalesTotal - cashSalesTotal)
   openCreditTotal: number
   openCreditCustomerCount: number
   lowStockProducts: Product[]
@@ -83,6 +84,7 @@ export function useReports() {
       const stockValue = calcStockValue(products, entries)
       const cashSalesTotal = cashSales.reduce((sum, s) => sum + s.totalPrice, 0)
       const allSalesTotal = allSales.reduce((sum, s) => sum + s.totalPrice, 0)
+      const creditSalesTotal = allSalesTotal - cashSalesTotal
 
       const lowStockProducts = products.filter(p => {
         const qty = entryMap.get(p.id)?.quantity ?? 0
@@ -97,6 +99,7 @@ export function useReports() {
         stockValue,
         allSalesTotal,
         cashSalesTotal,
+        creditSalesTotal,
         openCreditTotal,
         openCreditCustomerCount,
         lowStockProducts,

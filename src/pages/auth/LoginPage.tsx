@@ -8,6 +8,7 @@ import { Loader2, Package } from 'lucide-react'
 import { useAuth } from '@/application/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 
 const schema = z.object({
@@ -16,19 +17,29 @@ const schema = z.object({
 })
 type FormValues = z.infer<typeof schema>
 
+const REMEMBER_EMAIL_KEY = 'rememberedEmail'
+
 export function LoginPage() {
   const navigate = useNavigate()
   const { signIn } = useAuth()
   const [submitting, setSubmitting] = useState(false)
 
+  const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY) ?? ''
+  const [rememberEmail, setRememberEmail] = useState(!!savedEmail)
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: savedEmail, password: '' },
   })
 
   async function onSubmit(values: FormValues) {
     setSubmitting(true)
     try {
+      if (rememberEmail) {
+        localStorage.setItem(REMEMBER_EMAIL_KEY, values.email)
+      } else {
+        localStorage.removeItem(REMEMBER_EMAIL_KEY)
+      }
       await signIn(values.email, values.password)
       navigate('/', { replace: true })
     } catch (err: unknown) {
@@ -95,6 +106,16 @@ export function LoginPage() {
                 </FormItem>
               )}
             />
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="rememberEmail"
+                checked={rememberEmail}
+                onCheckedChange={(checked) => setRememberEmail(!!checked)}
+              />
+              <label htmlFor="rememberEmail" className="text-sm text-muted-foreground cursor-pointer select-none">
+                Lembrar email
+              </label>
+            </div>
             <Button
               type="submit"
               className="mt-2 w-full h-11 rounded-xl font-semibold text-base"

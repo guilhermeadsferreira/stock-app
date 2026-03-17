@@ -1,6 +1,6 @@
 # Product Status — StockApp
 
-> Última atualização: 2026-03-16 (rev 8)
+> Última atualização: 2026-03-17 (rev 10)
 
 ## Estado Geral
 
@@ -16,6 +16,7 @@
 - [x] Cadastro com confirmação de e-mail
 - [x] Logout
 - [x] Rotas protegidas (redirect para `/login` sem sessão)
+- [x] "Lembrar email" no formulário de login (persiste via localStorage)
 
 ### Produtos
 - [x] Cadastro de produto (nome, código de barras, preço de custo, preço de venda, validade)
@@ -69,6 +70,7 @@
 - [x] Card "Vendas hoje" na Home clicável → navega para lista do dia
 - [x] Total de fiado em aberto (valor + contagem de clientes)
 - [x] fix: "Vendas hoje" agora inclui vendas fiado (antes só contava à vista)
+- [x] Relatórios: total de vendas (à vista + fiado) como métrica principal, com breakdown por tipo
 - [x] Alertas: produtos com estoque baixo (banner + lista com badge na Home)
 - [x] Alertas: produtos perto do vencimento (banner + lista com badge na Home)
 - [x] Dialog de confirmação ao clicar em produto sem estoque na listagem (redireciona para detalhe)
