@@ -40,7 +40,7 @@ export function HomePage() {
         <div className="space-y-2">
           {data.lowStockProducts.length > 0 && (
             <button
-              onClick={() => navigate('/stock')}
+              onClick={() => navigate('/stock?filter=low')}
               className="flex w-full items-center gap-3 rounded-2xl border-l-[3px] border-amber-400 bg-amber-50 px-4 py-3 text-left transition-colors active:bg-amber-100"
             >
               <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-600" />
@@ -63,8 +63,8 @@ export function HomePage() {
         </div>
       )}
 
-      {/* Lista estoque baixo */}
-      {!loading && data && data.lowStockProducts.length > 0 && (
+      {/* Lista estoque baixo — só exibe quando há muitos itens (> 5) */}
+      {!loading && data && data.lowStockProducts.length > 5 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
             <Package className="h-4 w-4" />
@@ -84,8 +84,8 @@ export function HomePage() {
         </div>
       )}
 
-      {/* Lista próximos ao vencimento */}
-      {!loading && data && data.nearExpiryProducts.length > 0 && (
+      {/* Lista próximos ao vencimento — só exibe quando há muitos itens (> 5) */}
+      {!loading && data && data.nearExpiryProducts.length > 5 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-red-700">
             <Clock className="h-4 w-4" />

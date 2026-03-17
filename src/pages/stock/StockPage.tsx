@@ -5,7 +5,7 @@ import { useProducts } from '@/application/hooks/useProducts'
 import { useStock } from '@/application/hooks/useStock'
 import { useSettingsStore } from '@/application/stores/settingsStore'
 import { centsToBRL } from '@/domain/formatters/currency'
-import { isNearExpiry, isExpired } from '@/domain/rules/stock.rules'
+import { isLowStock, isNearExpiry, isExpired } from '@/domain/rules/stock.rules'
 import { StockBadge } from '@/components/stock/StockBadge'
 import { ExpiryBadge } from '@/components/stock/ExpiryBadge'
 import { Input } from '@/components/ui/input'
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
-type ExpiryFilter = 'all' | 'expiring' | 'expired'
+type StockFilter = 'all' | 'low' | 'expiring' | 'expired'
 
 export function StockPage() {
   const navigate = useNavigate()
@@ -23,7 +23,7 @@ export function StockPage() {
   const { entries, loadEntries } = useStock()
   const { lowStockThreshold, expirationAlertDays } = useSettingsStore()
 
-  const expiryFilter = (searchParams.get('filter') as ExpiryFilter) ?? 'all'
+  const activeFilter = (searchParams.get('filter') as StockFilter) ?? 'all'
 
   useEffect(() => {
     load()
@@ -38,12 +38,13 @@ export function StockPage() {
       (p.barcode && p.barcode.includes(search))
     if (!matchesSearch) return false
 
-    if (expiryFilter === 'expiring') return isNearExpiry(p.expirationDate, expirationAlertDays)
-    if (expiryFilter === 'expired') return isExpired(p.expirationDate)
+    if (activeFilter === 'low') return isLowStock(entryMap.get(p.id) ?? 0, lowStockThreshold)
+    if (activeFilter === 'expiring') return isNearExpiry(p.expirationDate, expirationAlertDays)
+    if (activeFilter === 'expired') return isExpired(p.expirationDate)
     return true
   })
 
-  function setFilter(filter: ExpiryFilter) {
+  function setFilter(filter: StockFilter) {
     if (filter === 'all') {
       setSearchParams({})
     } else {
@@ -51,8 +52,9 @@ export function StockPage() {
     }
   }
 
-  const chips: { key: ExpiryFilter; label: string }[] = [
+  const chips: { key: StockFilter; label: string }[] = [
     { key: 'all', label: 'Todos' },
+    { key: 'low', label: 'Estoque baixo' },
     { key: 'expiring', label: 'A vencer' },
     { key: 'expired', label: 'Vencidos' },
   ]
@@ -90,7 +92,7 @@ export function StockPage() {
             onClick={() => setFilter(chip.key)}
             className={cn(
               'rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors',
-              expiryFilter === chip.key
+              activeFilter === chip.key
                 ? 'bg-foreground text-background'
                 : 'bg-card text-muted-foreground border border-border/60',
             )}
@@ -106,7 +108,7 @@ export function StockPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center text-muted-foreground text-sm">
-          {search || expiryFilter !== 'all' ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado ainda'}
+          {search || activeFilter !== 'all' ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado ainda'}
         </div>
       ) : (
         <div className="space-y-2.5">
