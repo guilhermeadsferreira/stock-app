@@ -11,11 +11,12 @@ import { useStock } from '@/application/hooks/useStock'
 import { useProducts } from '@/application/hooks/useProducts'
 import { useAuthStore } from '@/application/stores/authStore'
 import { useSettingsStore } from '@/application/stores/settingsStore'
-import { centsToBRL } from '@/domain/formatters/currency'
+import { centsToBRL, centsToFloat, floatToCents } from '@/domain/formatters/currency'
 import { formatDate } from '@/domain/formatters/date'
 import { StockBadge } from '@/components/stock/StockBadge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -43,13 +44,19 @@ const adjustSchema = z.object({
 })
 type AdjustForm = z.output<typeof adjustSchema>
 
+const priceSchema = z.object({
+  salePrice: z.coerce.number().min(0.01, 'Preço inválido'),
+  purchasePrice: z.coerce.number().min(0.01, 'Custo inválido'),
+})
+type PriceForm = z.output<typeof priceSchema>
+
 export function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const { lowStockThreshold } = useSettingsStore()
   const { getEntry, replenish, adjustQuantity, removeEntry } = useStock()
-  const { remove } = useProducts()
+  const { remove, update } = useProducts()
   const [product, setProduct] = useState<Product | null>(null)
   const [currentQty, setCurrentQty] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -57,11 +64,15 @@ export function ProductDetailPage() {
   const [submittingAdjust, setSubmittingAdjust] = useState(false)
   const [submittingReset, setSubmittingReset] = useState(false)
   const [submittingDelete, setSubmittingDelete] = useState(false)
+  const [priceDialogOpen, setPriceDialogOpen] = useState(false)
+  const [submittingPrice, setSubmittingPrice] = useState(false)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const restockForm = useForm<RestockForm>({ resolver: zodResolver(restockSchema) as any, defaultValues: { quantity: 1 } })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adjustForm = useForm<AdjustForm>({ resolver: zodResolver(adjustSchema) as any, defaultValues: { quantity: 0 } })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const priceForm = useForm<PriceForm>({ resolver: zodResolver(priceSchema) as any })
 
   useEffect(() => {
     if (!user || !productId) return
@@ -104,6 +115,33 @@ export function ProductDetailPage() {
       toast.error('Erro ao corrigir estoque')
     } finally {
       setSubmittingAdjust(false)
+    }
+  }
+
+  function openPriceDialog() {
+    if (!product) return
+    priceForm.reset({
+      salePrice: centsToFloat(product.salePrice),
+      purchasePrice: centsToFloat(product.purchasePrice),
+    })
+    setPriceDialogOpen(true)
+  }
+
+  async function onEditPrice(values: PriceForm) {
+    if (!productId) return
+    setSubmittingPrice(true)
+    try {
+      const updated = await update(productId, {
+        salePrice: floatToCents(values.salePrice),
+        purchasePrice: floatToCents(values.purchasePrice),
+      })
+      setProduct(updated)
+      setPriceDialogOpen(false)
+      toast.success('Preços atualizados!')
+    } catch {
+      toast.error('Erro ao atualizar preços')
+    } finally {
+      setSubmittingPrice(false)
     }
   }
 
@@ -173,6 +211,10 @@ export function ProductDetailPage() {
             </div>
           )}
         </div>
+        <Button variant="outline" size="sm" className="w-full" onClick={openPriceDialog}>
+          <Pencil className="mr-2 h-3.5 w-3.5" />
+          Editar preços
+        </Button>
       </div>
 
       {/* Ações de estoque: repor + corrigir lado a lado */}
@@ -291,6 +333,46 @@ export function ProductDetailPage() {
           </AlertDialog>
         </div>
       </div>
+      <Dialog open={priceDialogOpen} onOpenChange={open => { setPriceDialogOpen(open); if (!open) priceForm.reset() }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar preços</DialogTitle>
+          </DialogHeader>
+          <Form {...priceForm}>
+            <form onSubmit={priceForm.handleSubmit(onEditPrice)} className="space-y-4 pt-2">
+              <FormField
+                control={priceForm.control}
+                name="salePrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preço de venda (R$)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" min="0.01" inputMode="decimal" onFocus={e => e.target.select()} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={priceForm.control}
+                name="purchasePrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Custo (R$)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" min="0.01" inputMode="decimal" onFocus={e => e.target.select()} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={submittingPrice}>
+                {submittingPrice ? 'Salvando...' : 'Salvar preços'}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
