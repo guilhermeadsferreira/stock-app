@@ -7,13 +7,17 @@ import type { Business } from '@/domain/types'
 const businessRepo = new BusinessRepository(supabase)
 
 async function loadBusinessForUser(userId: string): Promise<Business | null> {
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('business_id')
-    .eq('id', userId)
-    .single()
-  if (!profile?.business_id) return null
-  return businessRepo.findById(profile.business_id)
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000))
+  const fetch = (async () => {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('business_id')
+      .eq('id', userId)
+      .maybeSingle()
+    if (!profile?.business_id) return null
+    return businessRepo.findById(profile.business_id)
+  })()
+  return Promise.race([fetch, timeout])
 }
 
 export function useAuthListener() {
@@ -25,13 +29,12 @@ export function useAuthListener() {
       setAuth(user, session)
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        if (user) {
-          const business = await loadBusinessForUser(user.id)
+        try {
+          const business = user ? await loadBusinessForUser(user.id) : null
           setCurrentBusiness(business)
-        } else {
-          setCurrentBusiness(null)
+        } finally {
+          setLoading(false)
         }
-        setLoading(false)
       } else if (event === 'SIGNED_OUT') {
         setCurrentBusiness(null)
         setLoading(false)

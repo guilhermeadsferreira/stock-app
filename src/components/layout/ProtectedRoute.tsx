@@ -8,6 +8,12 @@ interface Props {
 export function ProtectedRoute({ children }: Props) {
   const { session, currentBusiness, isLoading } = useAuthStore()
 
+  // Se já temos sessão e empresa em cache, renderiza imediatamente
+  // (auth listener vai atualizar em background se necessário)
+  if (session && currentBusiness) {
+    return <>{children}</>
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-dvh items-center justify-center">

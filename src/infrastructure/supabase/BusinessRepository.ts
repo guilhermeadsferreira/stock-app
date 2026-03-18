@@ -45,19 +45,19 @@ export class BusinessRepository implements IBusinessRepository {
 
   async create(name: string, ownerId: string, ownerEmail: string): Promise<Business> {
     const inviteCode = generateCode()
+    const id = crypto.randomUUID()
+    const createdAt = new Date()
 
-    const { data: biz, error: bizError } = await this.client
+    const { error: bizError } = await this.client
       .from('businesses')
-      .insert({ name, owner_id: ownerId, invite_code: inviteCode })
-      .select()
-      .single()
-    if (bizError || !biz) throw new Error(bizError?.message ?? 'Erro ao criar empresa')
+      .insert({ id, name, owner_id: ownerId, invite_code: inviteCode })
+    if (bizError) throw new Error(bizError.message)
 
     await this.client
       .from('user_profiles')
-      .upsert({ id: ownerId, email: ownerEmail, business_id: biz.id })
+      .upsert({ id: ownerId, email: ownerEmail, business_id: id })
 
-    return mapBusiness(biz)
+    return { id, name, ownerId, inviteCode, lowStockThreshold: 5, expirationAlertDays: 7, createdAt }
   }
 
   async getMemberCount(businessId: string): Promise<number> {
