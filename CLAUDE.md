@@ -2,22 +2,48 @@
 
 This file provides guidance to Claude Code (claude.ai/code) and to Cursor when working with code in this repository.
 
+## PM Agent
+
+Este projeto é gerenciado pelo PM Agent. Todo o contexto de produto vive lá:
+
+**Caminho:** `/Users/guilhermeaugusto/Documents/workspace-projects/pm-agent/projects/stock-app/`
+
+```
+pm-agent/projects/stock-app/
+├── README.md          → visão geral, status, decisões-chave
+├── PRD.md             → requisitos e escopo
+├── decisions/         → PDRs (decisões arquiteturais e de produto)
+├── tasks/
+│   ├── backlog.md     → tasks priorizadas
+│   ├── active.md      → em andamento
+│   └── done/          → tasks concluídas com contexto completo
+├── docs/              → pitch, tech, product status, roteiro de testes
+└── cycles/            → ciclos Shape Up planejados
+```
+
+Antes de implementar qualquer feature, consulte `tasks/backlog.md` ou `tasks/active.md` para entender o escopo e critérios de aceite.
+
 **Cursor:** Os fluxos equivalentes aos comandos do Claude estão em `.cursor/skills/` (git-commit, plan-task, product-review, new-task). Use-os ao pedir "commitar", "planejar a task X", "revisão de produto" ou "criar uma task".
 
 ## Living Documentation
 
-The `docs/` folder contains three documents that must stay in sync with the codebase:
+A documentação de produto vive no PM Agent — não neste repo. Ao fazer qualquer alteração relevante, atualize os arquivos correspondentes em:
 
-- `docs/PITCH.md` — product pitch (update when scope, target audience, or key features change)
-- `docs/PRODUCT_STATUS.md` — current feature status and backlog (update when features are added, completed, or reprioritized; always update "Última atualização" date)
-- `docs/TECH.md` — technical reference (update when stack, architecture, routes, DB schema, or conventions change; always update "Última atualização" date)
+**`/Users/guilhermeaugusto/Documents/workspace-projects/pm-agent/projects/stock-app/docs/`**
+
+| Documento | Onde | Quando atualizar |
+|---|---|---|
+| `docs/PRODUCT_STATUS.md` | pm-agent | Ao adicionar, concluir ou remover uma feature |
+| `docs/PITCH.md` | pm-agent | Ao mudar escopo ou público-alvo |
+| `PRD_TECH.md` | raiz deste repo | Ao mudar stack, arquitetura, rotas, schema DB ou convenções técnicas |
 
 **MANDATORY — no exceptions:** before every commit (including bug fixes and UX changes), run through this checklist:
 
-- [ ] Did I add, complete, or remove a feature? → update `PRODUCT_STATUS.md` (check/uncheck items, adjust backlog)
-- [ ] Did I add/change a hook, repository method, route, convention, or DB schema? → update `TECH.md`
-- [ ] Did I change the product scope or target audience? → update `PITCH.md`
-- [ ] Did I update any doc? → bump "Última atualização" date in that doc
+- [ ] Adicionei, conclui ou removi uma feature? → atualizar `docs/PRODUCT_STATUS.md` no pm-agent
+- [ ] Mudei stack, arquitetura, schema, rotas ou convenções técnicas? → atualizar `PRD_TECH.md` na raiz deste repo
+- [ ] Mudei escopo ou público-alvo? → atualizar `docs/PITCH.md` no pm-agent
+- [ ] Conclui uma task? → mover de `tasks/active.md` para `tasks/done/` no pm-agent
+- [ ] Atualizei algum doc? → bumpar "Última atualização" nesse doc
 
 Docs are never optional. A commit that changes behavior without updating the relevant doc is incomplete.
 
@@ -95,4 +121,5 @@ Debt balance is always derived: `calcDebtBalance(creditSales, payments)` from `c
 
 ## PRD
 
-Full product requirements and data model: `stock-app-prd-tech.md`.
+- Produto: `/Users/guilhermeaugusto/Documents/workspace-projects/pm-agent/projects/stock-app/PRD.md`
+- Técnico: `PRD_TECH.md` (raiz deste repo)

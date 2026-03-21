@@ -39,7 +39,12 @@ export class BusinessRepository implements IBusinessRepository {
       .select('*')
       .eq('invite_code', code)
       .single()
-    if (error || !data) return null
+    // PGRST116 = "no rows returned" — código não encontrado
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      throw new Error(error.message)
+    }
+    if (!data) return null
     return mapBusiness(data)
   }
 
