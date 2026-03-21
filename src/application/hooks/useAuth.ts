@@ -30,8 +30,14 @@ export function useAuthListener() {
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         try {
-          const business = user ? await loadBusinessForUser(user.id) : null
-          setCurrentBusiness(business)
+          if (!user) {
+            setCurrentBusiness(null)
+          } else if (!useAuthStore.getState().currentBusiness) {
+            // Só busca se ainda não temos business carregado.
+            // Evita re-fetch (e possível null) em refreshes de token que disparam SIGNED_IN.
+            const business = await loadBusinessForUser(user.id)
+            setCurrentBusiness(business)
+          }
         } finally {
           setLoading(false)
         }
