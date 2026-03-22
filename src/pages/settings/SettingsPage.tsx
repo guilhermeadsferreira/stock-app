@@ -99,7 +99,7 @@ export function SettingsPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Nome do negócio</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input {...field} disabled={!isOwner} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -110,7 +110,7 @@ export function SettingsPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Alerta de estoque baixo (quantidade)</FormLabel>
-                <FormControl><Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} /></FormControl>
+                <FormControl><Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} disabled={!isOwner} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -121,12 +121,15 @@ export function SettingsPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Alerta de vencimento (dias)</FormLabel>
-                <FormControl><Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} /></FormControl>
+                <FormControl><Input type="number" min="1" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} disabled={!isOwner} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">Salvar</Button>
+          {isOwner
+            ? <Button type="submit" className="w-full">Salvar</Button>
+            : <p className="text-center text-sm text-muted-foreground">Apenas o dono da empresa pode editar as configurações</p>
+          }
         </form>
       </Form>
 
