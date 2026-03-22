@@ -10,6 +10,7 @@ import { floatToCents } from '@/domain/formatters/currency'
 import { BarcodeScanner } from '@/components/stock/BarcodeScanner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 
 const schema = z.object({
@@ -114,7 +115,7 @@ export function NewProductPage() {
                 <FormItem>
                   <FormLabel>Custo (R$) *</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" onFocus={(e) => e.target.select()} {...field} />
+                    <CurrencyInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -127,7 +128,7 @@ export function NewProductPage() {
                 <FormItem>
                   <FormLabel>Preço venda (R$) *</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0,00" onFocus={(e) => e.target.select()} {...field} />
+                    <CurrencyInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
