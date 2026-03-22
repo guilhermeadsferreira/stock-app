@@ -49,9 +49,9 @@ export function HomePage() {
             {data.lowStockProducts.slice(0, 5).map(p => {
               const qty = data.stockEntries.find(e => e.productId === p.id)?.quantity ?? 0
               return (
-                <div key={p.id} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5">
-                  <span className="text-sm font-medium">{p.name}</span>
-                  <StockBadge quantity={qty} threshold={lowStockThreshold} />
+                <div key={p.id} className="flex items-center gap-3 rounded-xl border border-border bg-white px-3 py-2.5">
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{p.name}</span>
+                  <div className="shrink-0"><StockBadge quantity={qty} threshold={lowStockThreshold} /></div>
                 </div>
               )
             })}
@@ -77,9 +77,9 @@ export function HomePage() {
           </div>
           <div className="space-y-1.5">
             {data.nearExpiryProducts.slice(0, 5).map(p => (
-              <div key={p.id} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5">
-                <span className="text-sm font-medium">{p.name}</span>
-                <ExpiryBadge expirationDate={p.expirationDate} alertDays={expirationAlertDays} />
+              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-border bg-white px-3 py-2.5">
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{p.name}</span>
+                <div className="shrink-0"><ExpiryBadge expirationDate={p.expirationDate} alertDays={expirationAlertDays} /></div>
               </div>
             ))}
           </div>

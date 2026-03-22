@@ -16,6 +16,7 @@ import { formatDate } from '@/domain/formatters/date'
 import { StockBadge } from '@/components/stock/StockBadge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -185,14 +186,16 @@ export function ProductDetailPage() {
 
       {/* Info do produto */}
       <div className="rounded-xl border border-border bg-white p-4 space-y-3">
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold">{product.name}</h1>
             {product.barcode && (
               <p className="text-sm text-muted-foreground font-mono">{product.barcode}</p>
             )}
           </div>
-          <StockBadge quantity={currentQty} threshold={lowStockThreshold} />
+          <div className="shrink-0">
+            <StockBadge quantity={currentQty} threshold={lowStockThreshold} />
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3 text-sm">
@@ -363,7 +366,7 @@ export function ProductDetailPage() {
                   <FormItem>
                     <FormLabel>Preço de venda (R$)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0.01" inputMode="decimal" onFocus={e => e.target.select()} {...field} />
+                      <CurrencyInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -376,7 +379,7 @@ export function ProductDetailPage() {
                   <FormItem>
                     <FormLabel>Custo (R$)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0.01" inputMode="decimal" onFocus={e => e.target.select()} {...field} />
+                      <CurrencyInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
