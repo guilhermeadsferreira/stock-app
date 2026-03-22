@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) and to Cursor when working with code in this repository.
 
+## ⚠️ PRODUÇÃO COM DADOS REAIS
+
+**Este projeto está em produção desde 2026-03-21 com clientes reais cadastrando estoque.**
+
+Antes de qualquer mudança:
+- **NUNCA** rodar `TRUNCATE` ou `DELETE` sem cláusula `WHERE` no banco de produção
+- **NUNCA** fazer `db:push` direto em produção sem revisar a migration gerada
+- Migrations destrutivas (drop column, rename table) exigem confirmação explícita do usuário
+- Mudanças em RLS policies podem bloquear acesso dos clientes — testar localmente antes
+- Em caso de dúvida sobre impacto: **perguntar antes de executar**
+
 ## PM Agent
 
 Este projeto é gerenciado pelo PM Agent. Todo o contexto de produto vive lá:
