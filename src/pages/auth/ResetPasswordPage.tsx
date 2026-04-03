@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,6 +22,7 @@ type FormValues = z.output<typeof schema>
 let updateInFlight = false
 
 export function ResetPasswordPage() {
+  const navigate = useNavigate()
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
@@ -35,6 +37,7 @@ export function ResetPasswordPage() {
       if (error && error.code !== 'same_password') throw error
       await supabase.auth.signOut()
       toast.success('Senha alterada! Faça login com a nova senha.')
+      navigate('/login', { replace: true })
     } catch {
       toast.error('Não foi possível alterar a senha. Tente novamente.')
     } finally {
