@@ -6,10 +6,8 @@ interface Props {
 }
 
 export function ProtectedRoute({ children }: Props) {
-  const { session, currentBusiness, isLoading } = useAuthStore()
+  const { session, businesses, currentBusiness, isLoading } = useAuthStore()
 
-  // Se já temos sessão e empresa em cache, renderiza imediatamente
-  // (auth listener vai atualizar em background se necessário)
   if (session && currentBusiness) {
     return <>{children}</>
   }
@@ -26,9 +24,10 @@ export function ProtectedRoute({ children }: Props) {
     return <Navigate to="/login" replace />
   }
 
-  if (!currentBusiness) {
+  if (businesses.length === 0) {
     return <Navigate to="/onboarding" replace />
   }
 
-  return <>{children}</>
+  // Autenticado, tem empresas mas nenhuma selecionada
+  return <Navigate to="/companies" replace />
 }

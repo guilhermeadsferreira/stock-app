@@ -48,6 +48,18 @@ export class BusinessRepository implements IBusinessRepository {
     return mapBusiness(data)
   }
 
+  async listForUser(userId: string): Promise<Business[]> {
+    const { data, error } = await this.client
+      .from('user_business')
+      .select('business_id, businesses(*)')
+      .eq('user_id', userId)
+    if (error || !data) return []
+    return data
+      .map((row: any) => row.businesses) // eslint-disable-line @typescript-eslint/no-explicit-any
+      .filter(Boolean)
+      .map(mapBusiness)
+  }
+
   async create(name: string, ownerId: string, ownerEmail: string): Promise<Business> {
     const inviteCode = generateCode()
     const id = crypto.randomUUID()
@@ -58,28 +70,46 @@ export class BusinessRepository implements IBusinessRepository {
       .insert({ id, name, owner_id: ownerId, invite_code: inviteCode })
     if (bizError) throw new Error(bizError.message)
 
+    // Dual-write: mantém user_profiles.business_id + escreve na junction
     await this.client
       .from('user_profiles')
       .upsert({ id: ownerId, email: ownerEmail, business_id: id })
+
+    await this.client
+      .from('user_business')
+      .upsert({ user_id: ownerId, business_id: id, role: 'owner' })
 
     return { id, name, ownerId, inviteCode, lowStockThreshold: 5, expirationAlertDays: 7, createdAt }
   }
 
   async getMemberCount(businessId: string): Promise<number> {
     const { count } = await this.client
-      .from('user_profiles')
-      .select('id', { count: 'exact', head: true })
+      .from('user_business')
+      .select('user_id', { count: 'exact', head: true })
       .eq('business_id', businessId)
     return count ?? 0
   }
 
   async addMember(businessId: string, userId: string, userEmail: string): Promise<void> {
+    // Dual-write: mantém user_profiles.business_id + escreve na junction
     await this.client
       .from('user_profiles')
       .upsert({ id: userId, email: userEmail, business_id: businessId })
+
+    await this.client
+      .from('user_business')
+      .upsert({ user_id: userId, business_id: businessId, role: 'member' })
   }
 
   async removeMember(businessId: string, userId: string): Promise<void> {
+    // Remove da junction table
+    await this.client
+      .from('user_business')
+      .delete()
+      .eq('user_id', userId)
+      .eq('business_id', businessId)
+
+    // Mantém user_profiles consistente durante a transição
     await this.client
       .from('user_profiles')
       .update({ business_id: null })
@@ -103,17 +133,17 @@ export class BusinessRepository implements IBusinessRepository {
       .eq('id', businessId)
       .single()
 
-    const { data: profiles } = await this.client
-      .from('user_profiles')
-      .select('id, email')
+    const { data: members } = await this.client
+      .from('user_business')
+      .select('user_id, role, user_profiles(email)')
       .eq('business_id', businessId)
 
-    if (!profiles) return []
+    if (!members) return []
 
-    return profiles.map((p: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
-      id: p.id,
-      email: p.email,
-      isOwner: p.id === biz?.owner_id,
+    return members.map((m: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+      id: m.user_id,
+      email: m.user_profiles?.email ?? '',
+      isOwner: m.user_id === biz?.owner_id,
     }))
   }
 

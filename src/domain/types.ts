@@ -36,6 +36,15 @@ export interface UserProfile {
   createdAt: Date
 }
 
+export type BusinessRole = 'owner' | 'member'
+
+export interface UserBusiness {
+  userId: string
+  businessId: string
+  role: BusinessRole
+  createdAt: Date
+}
+
 export interface Product {
   id: string
   businessId: string
