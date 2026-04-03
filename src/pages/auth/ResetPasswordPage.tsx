@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,9 +17,10 @@ const schema = z.object({
 })
 type FormValues = z.output<typeof schema>
 
-export function ResetPasswordPage() {
-  const inflightRef = useRef(false)
+// Module-level guard: survives component remounts caused by auth state navigation.
+let updateInFlight = false
 
+export function ResetPasswordPage() {
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
@@ -28,12 +28,11 @@ export function ResetPasswordPage() {
   })
 
   async function onSubmit(values: FormValues) {
-    if (inflightRef.current) return
-    inflightRef.current = true
+    if (updateInFlight) return
+    updateInFlight = true
     try {
       const { error } = await supabase.auth.updateUser({ password: values.password })
       if (error) throw error
-      // Navigation is handled by the USER_UPDATED auth listener after businesses reload.
       toast.success('Senha alterada com sucesso!')
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code
@@ -43,7 +42,7 @@ export function ResetPasswordPage() {
         toast.error('Não foi possível alterar a senha. Tente novamente.')
       }
     } finally {
-      inflightRef.current = false
+      updateInFlight = false
     }
   }
 

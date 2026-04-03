@@ -123,7 +123,7 @@ export const creditPayments = stockSchema.table('credit_payments', {
 ])
 
 export const userBusiness = stockSchema.table('user_business', {
-  userId: uuid('user_id').notNull(),
+  userId: uuid('user_id').notNull().references(() => userProfiles.id),
   businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
   role: text('role').notNull().default('member'), // 'owner' | 'member'
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

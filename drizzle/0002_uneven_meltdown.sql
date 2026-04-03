@@ -1,0 +1,1 @@
+ALTER TABLE "stock"."user_business" ADD CONSTRAINT "user_business_user_id_user_profiles_id_fk" FOREIGN KEY ("user_id") REFERENCES "stock"."user_profiles"("id") ON DELETE no action ON UPDATE no action;
