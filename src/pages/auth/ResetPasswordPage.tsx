@@ -35,8 +35,13 @@ export function ResetPasswordPage() {
       if (error) throw error
       toast.success('Senha alterada com sucesso!')
       navigate('/', { replace: true })
-    } catch {
-      toast.error('Não foi possível alterar a senha. Tente novamente.')
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code
+      if (code === 'same_password') {
+        toast.error('A nova senha deve ser diferente da senha atual.')
+      } else {
+        toast.error('Não foi possível alterar a senha. Tente novamente.')
+      }
     } finally {
       setSubmitting(false)
     }

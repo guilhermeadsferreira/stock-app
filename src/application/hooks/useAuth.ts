@@ -52,6 +52,15 @@ export function useAuthListener() {
         } finally {
           setLoading(false)
         }
+      } else if (event === 'USER_UPDATED') {
+        // Fired after updateUser (e.g. password reset). Reload businesses since
+        // the recovery session may have had restricted permissions during INITIAL_SESSION.
+        if (user) {
+          const businesses = await loadBusinessesForUser(user.id)
+          setBusinesses(businesses)
+          setCurrentBusiness(pickCurrentBusiness(businesses))
+        }
+        setLoading(false)
       } else if (event === 'SIGNED_OUT') {
         setBusinesses([])
         setCurrentBusiness(null)
