@@ -53,8 +53,7 @@ export class BusinessRepository implements IBusinessRepository {
       .from('user_business')
       .select('business_id, businesses(*)')
       .eq('user_id', userId)
-    if (error) throw new Error(`listForUser failed: ${error.code} — ${error.message}`)
-    if (!data) return []
+    if (error || !data) return []
     return data
       .map((row: any) => row.businesses) // eslint-disable-line @typescript-eslint/no-explicit-any
       .filter(Boolean)
