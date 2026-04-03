@@ -6,6 +6,7 @@ import {
   timestamp,
   uniqueIndex,
   index,
+  primaryKey,
 } from 'drizzle-orm/pg-core'
 
 export const stockSchema = pgSchema('stock')
@@ -119,4 +120,14 @@ export const creditPayments = stockSchema.table('credit_payments', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('credit_payments_customer_idx').on(t.customerId),
+])
+
+export const userBusiness = stockSchema.table('user_business', {
+  userId: uuid('user_id').notNull(),
+  businessId: uuid('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  role: text('role').notNull().default('member'), // 'owner' | 'member'
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  primaryKey({ columns: [t.userId, t.businessId] }),
+  index('user_business_user_id_idx').on(t.userId),
 ])

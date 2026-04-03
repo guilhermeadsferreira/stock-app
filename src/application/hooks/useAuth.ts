@@ -6,23 +6,26 @@ import { useAuthStore } from '@/application/stores/authStore'
 import type { Business } from '@/domain/types'
 
 const businessRepo = new BusinessRepository(supabase)
+const SELECTED_BUSINESS_KEY = 'selectedBusinessId'
 
-async function loadBusinessForUser(userId: string): Promise<Business | null> {
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000))
-  const fetch = (async () => {
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('business_id')
-      .eq('id', userId)
-      .maybeSingle()
-    if (!profile?.business_id) return null
-    return businessRepo.findById(profile.business_id)
-  })()
+async function loadBusinessesForUser(userId: string): Promise<Business[]> {
+  const timeout = new Promise<Business[]>((resolve) => setTimeout(() => resolve([]), 8000))
+  const fetch = businessRepo.listForUser(userId)
   return Promise.race([fetch, timeout])
 }
 
+function pickCurrentBusiness(businesses: Business[]): Business | null {
+  if (businesses.length === 0) return null
+  const savedId = localStorage.getItem(SELECTED_BUSINESS_KEY)
+  if (savedId) {
+    const saved = businesses.find((b) => b.id === savedId)
+    if (saved) return saved
+  }
+  return businesses[0]
+}
+
 export function useAuthListener() {
-  const { setAuth, setLoading, setCurrentBusiness } = useAuthStore()
+  const { setAuth, setLoading, setBusinesses, setCurrentBusiness } = useAuthStore()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -37,24 +40,28 @@ export function useAuthListener() {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         try {
           if (!user) {
+            setBusinesses([])
             setCurrentBusiness(null)
-          } else if (!useAuthStore.getState().currentBusiness) {
-            // Só busca se ainda não temos business carregado.
-            // Evita re-fetch (e possível null) em refreshes de token que disparam SIGNED_IN.
-            const business = await loadBusinessForUser(user.id)
-            setCurrentBusiness(business)
+          } else if (useAuthStore.getState().businesses.length === 0) {
+            // Só busca se ainda não temos businesses carregadas.
+            // Evita re-fetch em refreshes de token que disparam SIGNED_IN.
+            const businesses = await loadBusinessesForUser(user.id)
+            setBusinesses(businesses)
+            setCurrentBusiness(pickCurrentBusiness(businesses))
           }
         } finally {
           setLoading(false)
         }
       } else if (event === 'SIGNED_OUT') {
+        setBusinesses([])
         setCurrentBusiness(null)
+        localStorage.removeItem(SELECTED_BUSINESS_KEY)
         setLoading(false)
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [setAuth, setLoading, setCurrentBusiness])
+  }, [setAuth, setLoading, setBusinesses, setCurrentBusiness])
 }
 
 export function useAuth() {

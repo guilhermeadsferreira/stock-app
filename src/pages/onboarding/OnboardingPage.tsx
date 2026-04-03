@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 
 export function OnboardingPage() {
   const navigate = useNavigate()
-  const { session, currentBusiness, isLoading } = useAuthStore()
+  const { session, businesses, currentBusiness, isLoading } = useAuthStore()
   const { createBusiness, joinByCode } = useBusiness()
   const [businessName, setBusinessName] = useState('')
   const [inviteCode, setInviteCode] = useState('')
@@ -18,10 +18,14 @@ export function OnboardingPage() {
     if (!isLoading && currentBusiness) {
       navigate('/', { replace: true })
     }
+    if (!isLoading && !currentBusiness && businesses.length > 0) {
+      // Tem empresas mas nenhuma selecionada — vai para tela de seleção
+      navigate('/companies', { replace: true })
+    }
     if (!isLoading && !session) {
       navigate('/login', { replace: true })
     }
-  }, [isLoading, currentBusiness, session, navigate])
+  }, [isLoading, currentBusiness, businesses, session, navigate])
 
   if (isLoading) {
     return (
