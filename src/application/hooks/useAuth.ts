@@ -10,7 +10,11 @@ const SELECTED_BUSINESS_KEY = 'selectedBusinessId'
 
 async function loadBusinessesForUser(userId: string): Promise<Business[]> {
   const timeout = new Promise<Business[]>((resolve) => setTimeout(() => resolve([]), 8000))
-  const fetch = businessRepo.listForUser(userId)
+  const fetch = businessRepo.listForUser(userId).catch((err) => {
+    // Surfacea o erro para diagnóstico — query user_business pode estar falhando silenciosamente
+    import('sonner').then(({ toast }) => toast.error(String(err)))
+    return [] as Business[]
+  })
   return Promise.race([fetch, timeout])
 }
 
