@@ -61,6 +61,7 @@ export function useAuthListener() {
           setCurrentBusiness(pickCurrentBusiness(businesses))
         }
         setLoading(false)
+        router.navigate('/', { replace: true })
       } else if (event === 'SIGNED_OUT') {
         setBusinesses([])
         setCurrentBusiness(null)

@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -17,24 +16,25 @@ const schema = z.object({
   message: 'As senhas não coincidem',
   path: ['confirmPassword'],
 })
-type FormValues = z.infer<typeof schema>
+type FormValues = z.output<typeof schema>
 
 export function ResetPasswordPage() {
-  const navigate = useNavigate()
-  const [submitting, setSubmitting] = useState(false)
+  const inflightRef = useRef(false)
 
   const form = useForm<FormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: { password: '', confirmPassword: '' },
   })
 
   async function onSubmit(values: FormValues) {
-    setSubmitting(true)
+    if (inflightRef.current) return
+    inflightRef.current = true
     try {
       const { error } = await supabase.auth.updateUser({ password: values.password })
       if (error) throw error
+      // Navigation is handled by the USER_UPDATED auth listener after businesses reload.
       toast.success('Senha alterada com sucesso!')
-      navigate('/', { replace: true })
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code
       if (code === 'same_password') {
@@ -43,9 +43,11 @@ export function ResetPasswordPage() {
         toast.error('Não foi possível alterar a senha. Tente novamente.')
       }
     } finally {
-      setSubmitting(false)
+      inflightRef.current = false
     }
   }
+
+  const isSubmitting = form.formState.isSubmitting
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-6">
@@ -101,9 +103,9 @@ export function ResetPasswordPage() {
             <Button
               type="submit"
               className="mt-2 w-full h-11 rounded-xl font-semibold text-base"
-              disabled={submitting}
+              disabled={isSubmitting}
             >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar nova senha'}
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar nova senha'}
             </Button>
           </form>
         </Form>
