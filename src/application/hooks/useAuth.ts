@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { supabase } from '@/infrastructure/supabase/client'
+import { router } from '@/router'
 import { BusinessRepository } from '@/infrastructure/supabase/BusinessRepository'
 import { useAuthStore } from '@/application/stores/authStore'
 import type { Business } from '@/domain/types'
@@ -27,6 +28,11 @@ export function useAuthListener() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const user = session?.user ?? null
       setAuth(user, session)
+
+      if (event === 'PASSWORD_RECOVERY') {
+        router.navigate('/reset-password', { replace: true })
+        return
+      }
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         try {
