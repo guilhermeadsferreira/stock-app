@@ -10,11 +10,7 @@ const SELECTED_BUSINESS_KEY = 'selectedBusinessId'
 
 async function loadBusinessesForUser(userId: string): Promise<Business[]> {
   const timeout = new Promise<Business[]>((resolve) => setTimeout(() => resolve([]), 8000))
-  const fetch = businessRepo.listForUser(userId).catch((err) => {
-    // Surfacea o erro para diagnóstico — query user_business pode estar falhando silenciosamente
-    import('sonner').then(({ toast }) => toast.error(String(err)))
-    return [] as Business[]
-  })
+  const fetch = businessRepo.listForUser(userId)
   return Promise.race([fetch, timeout])
 }
 
@@ -56,16 +52,6 @@ export function useAuthListener() {
         } finally {
           setLoading(false)
         }
-      } else if (event === 'USER_UPDATED') {
-        // Fired after updateUser (e.g. password reset). Reload businesses since
-        // the recovery session may have had restricted permissions during INITIAL_SESSION.
-        if (user) {
-          const businesses = await loadBusinessesForUser(user.id)
-          setBusinesses(businesses)
-          setCurrentBusiness(pickCurrentBusiness(businesses))
-        }
-        setLoading(false)
-        router.navigate('/', { replace: true })
       } else if (event === 'SIGNED_OUT') {
         setBusinesses([])
         setCurrentBusiness(null)

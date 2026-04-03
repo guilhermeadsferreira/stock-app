@@ -32,10 +32,9 @@ export function ResetPasswordPage() {
     updateInFlight = true
     try {
       const { error } = await supabase.auth.updateUser({ password: values.password })
-      // same_password = a senha já foi alterada (request duplicado do SDK).
-      // Tratar como sucesso pois o resultado final é o que o usuário pediu.
       if (error && error.code !== 'same_password') throw error
-      toast.success('Senha alterada com sucesso!')
+      await supabase.auth.signOut()
+      toast.success('Senha alterada! Faça login com a nova senha.')
     } catch {
       toast.error('Não foi possível alterar a senha. Tente novamente.')
     } finally {
