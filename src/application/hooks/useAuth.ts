@@ -38,18 +38,17 @@ export function useAuthListener() {
       }
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        try {
-          if (!user) {
-            setBusinesses([])
-            setCurrentBusiness(null)
-          } else if (useAuthStore.getState().businesses.length === 0) {
-            // Só busca se ainda não temos businesses carregadas.
-            // Evita re-fetch em refreshes de token que disparam SIGNED_IN.
-            const businesses = await loadBusinessesForUser(user.id)
-            setBusinesses(businesses)
-            setCurrentBusiness(pickCurrentBusiness(businesses))
-          }
-        } finally {
+        if (!user) {
+          useAuthStore.setState({ businesses: [], currentBusiness: null, isLoading: false })
+        } else if (useAuthStore.getState().businesses.length === 0) {
+          // Só busca se ainda não temos businesses carregadas.
+          // Evita re-fetch em refreshes de token que disparam SIGNED_IN.
+          const businesses = await loadBusinessesForUser(user.id)
+          const current = pickCurrentBusiness(businesses)
+          // Batch: atualiza tudo num único setState para evitar render intermediário
+          // onde isLoading=false mas businesses ainda está vazio (flash de onboarding).
+          useAuthStore.setState({ businesses, currentBusiness: current, isLoading: false })
+        } else {
           setLoading(false)
         }
       } else if (event === 'SIGNED_OUT') {
