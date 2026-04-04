@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ScanLine, Plus, Minus, X, Pencil, Check } from 'lucide-react'
+import { ArrowLeft, ScanLine, Plus, Minus, X, Pencil, Check, ShoppingCart } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProducts } from '@/application/hooks/useProducts'
 import { useStock } from '@/application/hooks/useStock'
@@ -9,6 +9,7 @@ import { centsToBRL, centsToFloat, floatToCents } from '@/domain/formatters/curr
 import { BarcodeScanner } from '@/components/stock/BarcodeScanner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Product } from '@/domain/types'
 
 export function CartPage() {
@@ -179,7 +180,7 @@ export function CartPage() {
                       {editingPrice === item.product.id ? (
                         <div className="flex items-center gap-1 mt-1">
                           <span className="text-xs text-muted-foreground">R$</span>
-                          <input
+                          <Input
                             type="number"
                             step="0.01"
                             min="0.01"
@@ -187,7 +188,7 @@ export function CartPage() {
                             value={editPriceValue}
                             onChange={e => setEditPriceValue(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && confirmEditPrice(item.product.id)}
-                            className="w-20 rounded border px-1 py-0.5 text-sm"
+                            className="w-20 h-7 px-1.5 text-sm"
                             autoFocus
                           />
                           <button
@@ -246,9 +247,7 @@ export function CartPage() {
 
         {/* Empty state */}
         {items.length === 0 && !showSearchResults && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">Busque um produto ou escaneie o código de barras para começar</p>
-          </div>
+          <EmptyState icon={ShoppingCart} message="Busque um produto ou escaneie o código de barras para começar" />
         )}
       </div>
 
