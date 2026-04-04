@@ -40,12 +40,12 @@ export function CheckoutPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const customerForm = useForm<NewCustomerForm>({ resolver: zodResolver(newCustomerSchema) as any })
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty (guard submitting to avoid redirect during sale confirmation)
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !submitting) {
       navigate('/sales/new', { replace: true })
     }
-  }, [items.length, navigate])
+  }, [items.length, navigate, submitting])
 
   // Debounce customer search
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)

@@ -9,13 +9,10 @@ import { centsToBRL, centsToFloat, floatToCents } from '@/domain/formatters/curr
 import { BarcodeScanner } from '@/components/stock/BarcodeScanner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useAuthStore } from '@/application/stores/authStore'
 import type { Product } from '@/domain/types'
 
 export function CartPage() {
   const navigate = useNavigate()
-  const { currentBusiness } = useAuthStore()
-  const lowStockThreshold = currentBusiness?.lowStockThreshold ?? 5
   const { findByBarcode, products, load: loadProducts } = useProducts()
   const { getEntry } = useStock()
   const { items, addItem, updateQuantity, updatePrice, removeItem, total } = useCartStore()

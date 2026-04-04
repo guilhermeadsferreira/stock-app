@@ -43,12 +43,14 @@ export const useCartStore = create<CartState>((set, get) => ({
       }
     }),
 
-  updatePrice: (productId, price) =>
+  updatePrice: (productId, price) => {
+    if (price <= 0) return
     set((state) => ({
       items: state.items.map((i) =>
         i.product.id === productId ? { ...i, unitPrice: price } : i,
       ),
-    })),
+    }))
+  },
 
   removeItem: (productId) =>
     set((state) => ({

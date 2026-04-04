@@ -64,6 +64,14 @@ describe('cartStore', () => {
     expect(useCartStore.getState().items[0].unitPrice).toBe(1500)
   })
 
+  it('ignores invalid prices (zero or negative)', () => {
+    useCartStore.getState().addItem(mockProduct())
+    useCartStore.getState().updatePrice('prod-1', 0)
+    expect(useCartStore.getState().items[0].unitPrice).toBe(1000)
+    useCartStore.getState().updatePrice('prod-1', -500)
+    expect(useCartStore.getState().items[0].unitPrice).toBe(1000)
+  })
+
   it('removes a product by id', () => {
     useCartStore.getState().addItem(mockProduct({ id: 'prod-1' }))
     useCartStore.getState().addItem(mockProduct({ id: 'prod-2', name: 'Outro', salePrice: 2000 }))
