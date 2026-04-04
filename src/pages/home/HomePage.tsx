@@ -4,10 +4,10 @@ import { TrendingUp, Package, Users, Settings, Clock, ChevronRight } from 'lucid
 import { useReports } from '@/application/hooks/useReports'
 import { useAuthStore } from '@/application/stores/authStore'
 import { centsToBRL } from '@/domain/formatters/currency'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { StockBadge } from '@/components/stock/StockBadge'
 import { ExpiryBadge } from '@/components/stock/ExpiryBadge'
+import { StatCard } from '@/components/ui/stat-card'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -97,13 +97,13 @@ export function HomePage() {
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryCard
-          icon={<Package className="h-4 w-4 text-primary" strokeWidth={1.75} />}
+        <StatCard
+          icon={Package}
           label="Valor em estoque"
           value={loading ? null : centsToBRL(data?.stockValue ?? 0)}
         />
-        <SummaryCard
-          icon={<TrendingUp className="h-4 w-4 text-emerald-600" strokeWidth={1.75} />}
+        <StatCard
+          icon={TrendingUp}
           label="Vendas hoje"
           value={loading ? null : centsToBRL(data?.allSalesTotal ?? 0)}
           onClick={() => navigate('/sales?period=today')}
@@ -111,25 +111,19 @@ export function HomePage() {
       </div>
 
       {/* Card de fiado */}
-      <button onClick={() => navigate('/customers')} className="w-full text-left">
-        <div className="rounded-2xl bg-[#1e3a8a] p-5 transition-opacity active:opacity-90">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-300" strokeWidth={1.75} />
-              <span className="text-sm text-blue-200 font-medium">Fiado em aberto</span>
-            </div>
-            {!loading && (data?.openCreditCustomerCount ?? 0) > 0 && (
-              <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold text-blue-100">
-                {data!.openCreditCustomerCount} cliente{data!.openCreditCustomerCount > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-          {loading
-            ? <Skeleton className="h-8 w-32 bg-white/20" />
-            : <p className="text-3xl font-bold text-white leading-none tracking-tight">{centsToBRL(data?.openCreditTotal ?? 0)}</p>
-          }
-        </div>
-      </button>
+      <StatCard
+        variant="credit"
+        icon={Users}
+        label="Fiado em aberto"
+        value={loading ? null : centsToBRL(data?.openCreditTotal ?? 0)}
+        onClick={() => navigate('/customers')}
+      >
+        {!loading && (data?.openCreditCustomerCount ?? 0) > 0 && (
+          <span className="mt-3 inline-block rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold text-blue-100">
+            {data!.openCreditCustomerCount} cliente{data!.openCreditCustomerCount > 1 ? 's' : ''}
+          </span>
+        )}
+      </StatCard>
 
       {/* Ação rápida */}
       <Button
@@ -141,27 +135,4 @@ export function HomePage() {
       </Button>
     </div>
   )
-}
-
-function SummaryCard({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: string | null; onClick?: () => void }) {
-  const inner = (
-    <>
-      <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
-        {icon}
-        <p className="text-xs font-medium leading-tight">{label}</p>
-      </div>
-      {value === null
-        ? <Skeleton className="h-7 w-3/4" />
-        : <p className="text-2xl font-bold text-foreground leading-none tracking-tight">{value}</p>
-      }
-    </>
-  )
-  if (onClick) {
-    return (
-      <button onClick={onClick} className="rounded-2xl bg-card p-4 shadow-sm text-left active:scale-[0.98] transition-transform w-full">
-        {inner}
-      </button>
-    )
-  }
-  return <div className="rounded-2xl bg-card p-4 shadow-sm">{inner}</div>
 }
