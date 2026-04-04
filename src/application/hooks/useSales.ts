@@ -4,7 +4,7 @@ import { SaleRepository } from '@/infrastructure/supabase/SaleRepository'
 import { StockRepository } from '@/infrastructure/supabase/StockRepository'
 import { useAuthStore } from '@/application/stores/authStore'
 import { calcSaleTotal, validateSale } from '@/domain/rules/sale.rules'
-import type { Sale, Product, PaymentType, CartItem } from '@/domain/types'
+import type { Sale, Product, PaymentType, CartItem, SaleStatus } from '@/domain/types'
 import type { SaleFilters } from '@/domain/repositories/ISaleRepository'
 
 const saleRepo = new SaleRepository(supabase)
@@ -18,8 +18,12 @@ export interface CreateSaleInput {
   customerId: string | null
 }
 
+function deriveSaleStatus(paymentType: PaymentType): SaleStatus {
+  return paymentType === 'credit' ? 'pending' : 'paid'
+}
+
 export function useSales() {
-  const { currentBusiness } = useAuthStore()
+  const { currentBusiness, user } = useAuthStore()
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -65,6 +69,8 @@ export function useSales() {
       purchasePriceSnapshot: input.product.purchasePrice,
       paymentType: input.paymentType,
       customerId: input.customerId,
+      sellerId: user?.id ?? null,
+      status: deriveSaleStatus(input.paymentType),
     })
 
     // 2. Registra a movimentação de saída
@@ -122,6 +128,8 @@ export function useSales() {
         purchasePriceSnapshot: item.product.purchasePrice,
         paymentType,
         customerId,
+        sellerId: user?.id ?? null,
+        status: deriveSaleStatus(paymentType),
       })
       await stockRepo.addMovement({
         businessId: currentBusiness.id,

@@ -55,6 +55,7 @@ export interface Product {
   purchasePrice: number  // centavos
   salePrice: number      // centavos
   notes: string | null
+  maxDiscountPct: number | null  // percentual inteiro (0-100), null = sem limite
   expirationDate: Date | null
   createdAt: Date
   updatedAt: Date
@@ -90,6 +91,8 @@ export interface Customer {
   createdAt: Date
 }
 
+export type SaleStatus = 'paid' | 'pending'
+
 export interface Sale {
   id: string
   businessId: string
@@ -100,7 +103,19 @@ export interface Sale {
   purchasePriceSnapshot: number   // centavos — custo no momento da venda
   paymentType: PaymentType
   customerId: string | null       // obrigatório quando paymentType === 'credit'
+  sellerId: string | null
+  status: SaleStatus
   createdAt: Date
+}
+
+export interface SaleItem {
+  id: string
+  saleId: string
+  productId: string
+  quantity: number
+  unitPrice: number       // centavos — preço cobrado
+  unitCost: number        // centavos — custo no momento
+  discountPct: number     // percentual inteiro (0-100)
 }
 
 // Tipo local (não persiste no banco) — usado no fluxo de venda com múltiplos itens

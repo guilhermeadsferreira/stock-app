@@ -12,6 +12,8 @@ const makeSale = (totalPrice: number, customerId = 'c1'): Sale => ({
   purchasePriceSnapshot: 500,
   paymentType: 'credit',
   customerId,
+  sellerId: null,
+  status: 'pending',
   createdAt: new Date(),
 })
 

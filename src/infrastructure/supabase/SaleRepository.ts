@@ -14,6 +14,8 @@ function mapRow(row: any): Sale {
     purchasePriceSnapshot: row.purchase_price_snapshot,
     paymentType: row.payment_type,
     customerId: row.customer_id ?? null,
+    sellerId: row.seller_id ?? null,
+    status: row.status ?? 'paid',
     createdAt: new Date(row.created_at),
   }
 }
@@ -33,6 +35,8 @@ export class SaleRepository implements ISaleRepository {
         purchase_price_snapshot: sale.purchasePriceSnapshot,
         payment_type: sale.paymentType,
         customer_id: sale.customerId,
+        seller_id: sale.sellerId,
+        status: sale.status,
       })
       .select()
       .single()
