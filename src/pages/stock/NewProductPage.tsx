@@ -29,7 +29,7 @@ type FormValues = z.output<typeof schema>
 export function NewProductPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { create } = useProducts()
+  const { create, findByBarcode } = useProducts()
   const [scanning, setScanning] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -105,9 +105,15 @@ export function NewProductPage() {
                 <FormLabel>Código de barras</FormLabel>
                 {scanning ? (
                   <BarcodeScanner
-                    onResult={(code) => {
-                      field.onChange(code)
+                    onResult={async (code) => {
                       setScanning(false)
+                      const existing = await findByBarcode(code)
+                      if (existing) {
+                        toast.info('Produto já cadastrado — abrindo detalhes')
+                        navigate(`/stock/${existing.id}`)
+                        return
+                      }
+                      field.onChange(code)
                       toast.success('Código lido: ' + code)
                     }}
                     onClose={() => setScanning(false)}
