@@ -39,20 +39,20 @@ export function useAuthListener() {
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         if (!user) {
-          useAuthStore.setState({ businesses: [], currentBusiness: null, isLoading: false })
-        } else if (useAuthStore.getState().businesses.length === 0) {
-          // Só busca se ainda não temos businesses carregadas.
-          // Evita re-fetch em refreshes de token que disparam SIGNED_IN.
+          useAuthStore.setState({ businesses: null, currentBusiness: null, isLoading: false })
+        } else if (!useAuthStore.getState().businesses?.length) {
+          // Só busca se businesses é null (não carregou) ou [] (vazio).
+          // Evita re-fetch quando já temos businesses carregadas (refresh de token).
+          // Seta isLoading: true para cobrir re-entries (ex: SIGNED_IN após INITIAL_SESSION).
+          useAuthStore.setState({ isLoading: true })
           const businesses = await loadBusinessesForUser(user.id)
           const current = pickCurrentBusiness(businesses)
-          // Batch: atualiza tudo num único setState para evitar render intermediário
-          // onde isLoading=false mas businesses ainda está vazio (flash de onboarding).
           useAuthStore.setState({ businesses, currentBusiness: current, isLoading: false })
         } else {
           setLoading(false)
         }
       } else if (event === 'SIGNED_OUT') {
-        setBusinesses([])
+        setBusinesses(null)
         setCurrentBusiness(null)
         localStorage.removeItem(SELECTED_BUSINESS_KEY)
         setLoading(false)

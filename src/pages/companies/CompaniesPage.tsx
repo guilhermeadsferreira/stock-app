@@ -19,7 +19,7 @@ export function CompaniesPage() {
   const [loading, setLoading] = useState(false)
 
   function handleSwitch(businessId: string) {
-    const business = businesses.find((b) => b.id === businessId)
+    const business = (businesses ?? []).find((b) => b.id === businessId)
     if (!business) return
     switchBusiness(business)
     navigate('/', { replace: true })
@@ -78,7 +78,7 @@ export function CompaniesPage() {
       <div className="flex-1 px-4 py-4 space-y-3 max-w-lg mx-auto w-full">
         {mode === 'list' && (
           <>
-            {businesses.map((business) => {
+            {(businesses ?? []).map((business) => {
               const isActive = business.id === currentBusiness?.id
               const isOwner = business.ownerId === user?.id
               return (
