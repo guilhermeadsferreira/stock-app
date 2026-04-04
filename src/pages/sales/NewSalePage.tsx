@@ -40,7 +40,7 @@ export function NewSalePage() {
   const { findByBarcode, products, load: loadProducts } = useProducts()
   const { getEntry } = useStock()
   const { customers, load: loadCustomers, create: createCustomer } = useCustomers()
-  const { createSalesBatch } = useSales()
+  const { createSale } = useSales()
 
   const [step, setStep] = useState<Step>('payment')
   const [cart, setCart] = useState<CartItem[]>([])
@@ -169,8 +169,8 @@ export function NewSalePage() {
     if (!paymentType || cart.length === 0) return
     setSubmitting(true)
     try {
-      await createSalesBatch(cart, paymentType, selectedCustomer?.id ?? null)
-      toast.success(`${cart.length} ${cart.length === 1 ? 'venda registrada' : 'vendas registradas'}!`)
+      await createSale(cart, paymentType, selectedCustomer?.id ?? null)
+      toast.success('Venda registrada!')
       navigate('/')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro ao registrar venda')

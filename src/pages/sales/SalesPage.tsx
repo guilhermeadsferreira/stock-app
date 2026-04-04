@@ -33,6 +33,14 @@ function getPeriodRange(period: Period): { from: Date; to: Date } {
   }
 }
 
+const paymentLabel: Record<string, string> = { cash: 'Dinheiro', card: 'Cartão', pix: 'PIX', credit: 'Fiado' }
+const paymentBadge: Record<string, string> = {
+  cash: 'bg-green-100 text-green-700',
+  card: 'bg-purple-100 text-purple-700',
+  pix: 'bg-teal-100 text-teal-700',
+  credit: 'bg-blue-100 text-blue-700',
+}
+
 export function SalesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { currentBusiness } = useAuthStore()
@@ -52,7 +60,7 @@ export function SalesPage() {
       try {
         const { from, to } = getPeriodRange(period)
         const [fetchedSales, products, customers] = await Promise.all([
-          saleRepo.listByBusiness(currentBusiness.id, { from, to }),
+          saleRepo.listByBusinessWithItems(currentBusiness.id, { from, to }),
           productRepo.list(currentBusiness.id),
           customerRepo.list(currentBusiness.id),
         ])
@@ -124,8 +132,9 @@ export function SalesPage() {
       ) : (
         <div className="space-y-2.5">
           {sales.map(sale => {
-            const product = productMap.get(sale.productId)
             const customer = sale.customerId ? customerMap.get(sale.customerId) : null
+            const hasItems = sale.items && sale.items.length > 0
+
             return (
               <div
                 key={sale.id}
@@ -133,27 +142,48 @@ export function SalesPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[15px] truncate">
-                      {product?.name ?? 'Produto removido'}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {sale.quantity}× {centsToBRL(sale.unitPrice)}
-                      {customer && <span className="ml-2">· {customer.name}</span>}
-                    </p>
+                    {hasItems ? (
+                      <>
+                        <p className="font-semibold text-[15px] truncate">
+                          {sale.items!.length === 1
+                            ? productMap.get(sale.items![0].productId)?.name ?? 'Produto'
+                            : `${sale.items!.length} itens`}
+                        </p>
+                        <div className="text-sm text-muted-foreground mt-0.5 space-y-0.5">
+                          {sale.items!.map((item, i) => {
+                            const product = productMap.get(item.productId)
+                            return (
+                              <p key={i} className="truncate">
+                                {item.quantity}× {product?.name ?? 'Produto'} — {centsToBRL(item.quantity * item.unitPrice)}
+                              </p>
+                            )
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-[15px] truncate">
+                          {sale.productId ? (productMap.get(sale.productId)?.name ?? 'Produto removido') : 'Venda'}
+                        </p>
+                        {sale.quantity && sale.unitPrice && (
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {sale.quantity}× {centsToBRL(sale.unitPrice)}
+                          </p>
+                        )}
+                      </>
+                    )}
+                    {customer && (
+                      <p className="text-sm text-muted-foreground mt-0.5">· {customer.name}</p>
+                    )}
                     <p className="text-xs text-muted-foreground/60 mt-0.5">{formatDateTime(sale.createdAt)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
                     <span className="font-bold text-[15px]">{centsToBRL(sale.totalPrice)}</span>
                     <span className={cn(
                       'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                      {
-                        cash: 'bg-green-100 text-green-700',
-                        card: 'bg-purple-100 text-purple-700',
-                        pix: 'bg-teal-100 text-teal-700',
-                        credit: 'bg-blue-100 text-blue-700',
-                      }[sale.paymentType],
+                      paymentBadge[sale.paymentType],
                     )}>
-                      {{ cash: 'Dinheiro', card: 'Cartão', pix: 'PIX', credit: 'Fiado' }[sale.paymentType]}
+                      {paymentLabel[sale.paymentType]}
                     </span>
                   </div>
                 </div>
