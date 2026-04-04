@@ -124,6 +124,15 @@ export class SaleRepository implements ISaleRepository {
     return data.map(mapSaleItem)
   }
 
+  async deleteSale(saleId: string): Promise<void> {
+    // sale_items auto-deleta por CASCADE constraint
+    const { error } = await this.client
+      .from('sales')
+      .delete()
+      .eq('id', saleId)
+    if (error) throw new Error(error.message)
+  }
+
   async hasProductSales(businessId: string, productId: string): Promise<boolean> {
     // Checa tanto em sale_items quanto no campo legado
     const { count: itemCount } = await this.client

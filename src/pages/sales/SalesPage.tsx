@@ -1,14 +1,28 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
+import { toast } from 'sonner'
 import { supabase } from '@/infrastructure/supabase/client'
 import { SaleRepository } from '@/infrastructure/supabase/SaleRepository'
 import { ProductRepository } from '@/infrastructure/supabase/ProductRepository'
 import { CustomerRepository } from '@/infrastructure/supabase/CustomerRepository'
 import { useAuthStore } from '@/application/stores/authStore'
+import { useSales } from '@/application/hooks/useSales'
 import { centsToBRL } from '@/domain/formatters/currency'
 import { formatDateTime } from '@/domain/formatters/date'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import type { Sale, Product, Customer } from '@/domain/types'
 
@@ -40,10 +54,16 @@ const paymentBadge: Record<string, string> = {
   pix: 'bg-teal-100 text-teal-700',
   credit: 'bg-blue-100 text-blue-700',
 }
+const statusLabel: Record<string, string> = { paid: 'Pago', pending: 'Pendente' }
+const statusBadge: Record<string, string> = {
+  paid: 'bg-green-100 text-green-700',
+  pending: 'bg-amber-100 text-amber-700',
+}
 
 export function SalesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const { currentBusiness } = useAuthStore()
+  const { currentBusiness, user } = useAuthStore()
+  const { cancelSale } = useSales()
 
   const period = (searchParams.get('period') as Period) ?? 'today'
 
@@ -51,6 +71,13 @@ export function SalesPage() {
   const [productMap, setProductMap] = useState<Map<string, Product>>(new Map())
   const [customerMap, setCustomerMap] = useState<Map<string, Customer>>(new Map())
   const [loading, setLoading] = useState(true)
+
+  // Modal state
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+
+  const isOwner = currentBusiness?.ownerId === user?.id
 
   useEffect(() => {
     if (!currentBusiness) return
@@ -73,6 +100,22 @@ export function SalesPage() {
     }
     load()
   }, [currentBusiness, period])
+
+  async function handleCancelSale() {
+    if (!selectedSale) return
+    setCancelling(true)
+    try {
+      await cancelSale(selectedSale)
+      setSales(prev => prev.filter(s => s.id !== selectedSale.id))
+      setSelectedSale(null)
+      setCancelConfirmOpen(false)
+      toast.success('Venda cancelada e estoque revertido')
+    } catch {
+      toast.error('Erro ao cancelar venda')
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   const total = sales.reduce((sum, s) => sum + s.totalPrice, 0)
   const cashTotal = sales.filter(s => s.paymentType === 'cash').reduce((sum, s) => sum + s.totalPrice, 0)
@@ -136,41 +179,23 @@ export function SalesPage() {
             const hasItems = sale.items && sale.items.length > 0
 
             return (
-              <div
+              <button
                 key={sale.id}
-                className="rounded-2xl bg-card px-4 py-3.5 shadow-sm"
+                onClick={() => setSelectedSale(sale)}
+                className="w-full rounded-2xl bg-card px-4 py-3.5 shadow-sm text-left active:scale-[0.99] active:shadow-none transition-all duration-150"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     {hasItems ? (
-                      <>
-                        <p className="font-semibold text-[15px] truncate">
-                          {sale.items!.length === 1
-                            ? productMap.get(sale.items![0].productId)?.name ?? 'Produto'
-                            : `${sale.items!.length} itens`}
-                        </p>
-                        <div className="text-sm text-muted-foreground mt-0.5 space-y-0.5">
-                          {sale.items!.map((item, i) => {
-                            const product = productMap.get(item.productId)
-                            return (
-                              <p key={i} className="truncate">
-                                {item.quantity}× {product?.name ?? 'Produto'} — {centsToBRL(item.quantity * item.unitPrice)}
-                              </p>
-                            )
-                          })}
-                        </div>
-                      </>
+                      <p className="font-semibold text-[15px] truncate">
+                        {sale.items!.length === 1
+                          ? productMap.get(sale.items![0].productId)?.name ?? 'Produto'
+                          : `${sale.items!.length} itens`}
+                      </p>
                     ) : (
-                      <>
-                        <p className="font-semibold text-[15px] truncate">
-                          {sale.productId ? (productMap.get(sale.productId)?.name ?? 'Produto removido') : 'Venda'}
-                        </p>
-                        {sale.quantity && sale.unitPrice && (
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {sale.quantity}× {centsToBRL(sale.unitPrice)}
-                          </p>
-                        )}
-                      </>
+                      <p className="font-semibold text-[15px] truncate">
+                        {sale.productId ? (productMap.get(sale.productId)?.name ?? 'Produto removido') : 'Venda'}
+                      </p>
                     )}
                     {customer && (
                       <p className="text-sm text-muted-foreground mt-0.5">· {customer.name}</p>
@@ -187,11 +212,111 @@ export function SalesPage() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
       )}
+
+      {/* Modal de detalhe da venda */}
+      <Dialog open={selectedSale !== null} onOpenChange={open => { if (!open) setSelectedSale(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhe da venda</DialogTitle>
+          </DialogHeader>
+          {selectedSale && (
+            <div className="space-y-4">
+              {/* Status + Data */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{formatDateTime(selectedSale.createdAt)}</span>
+                <span className={cn(
+                  'rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                  statusBadge[selectedSale.status],
+                )}>
+                  {statusLabel[selectedSale.status]}
+                </span>
+              </div>
+
+              {/* Itens */}
+              <div className="space-y-2">
+                {(selectedSale.items ?? []).map((item, i) => {
+                  const product = productMap.get(item.productId)
+                  const lineTotal = item.quantity * item.unitPrice
+                  return (
+                    <div key={i} className="flex justify-between gap-2 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{product?.name ?? 'Produto'}</p>
+                        <p className="text-muted-foreground">
+                          {item.quantity}× {centsToBRL(item.unitPrice)}
+                          {item.discountPct > 0 && (
+                            <span className="ml-1.5 text-amber-600">(-{item.discountPct}%)</span>
+                          )}
+                        </p>
+                      </div>
+                      <span className="font-medium shrink-0">{centsToBRL(lineTotal)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between border-t pt-3">
+                <span className="font-semibold">Total</span>
+                <span className="text-lg font-bold text-primary">{centsToBRL(selectedSale.totalPrice)}</span>
+              </div>
+
+              {/* Pagamento + Cliente */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pagamento</span>
+                  <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', paymentBadge[selectedSale.paymentType])}>
+                    {paymentLabel[selectedSale.paymentType]}
+                  </span>
+                </div>
+                {selectedSale.customerId && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cliente</span>
+                    <span className="font-medium">{customerMap.get(selectedSale.customerId)?.name ?? '—'}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Cancelar venda — owner only */}
+              {isOwner && (
+                <Button
+                  variant="outline"
+                  className="w-full text-destructive hover:text-destructive border-destructive/40 hover:bg-destructive/5"
+                  onClick={() => setCancelConfirmOpen(true)}
+                >
+                  Cancelar venda
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmação de cancelamento */}
+      <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar venda?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O estoque dos produtos será revertido.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleCancelSale}
+              disabled={cancelling}
+            >
+              {cancelling ? 'Cancelando...' : 'Confirmar cancelamento'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
