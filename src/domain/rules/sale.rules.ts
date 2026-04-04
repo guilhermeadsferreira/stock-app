@@ -1,4 +1,4 @@
-import type { Product } from '@/domain/types'
+import type { Product, PaymentType } from '@/domain/types'
 
 export function calcSaleTotal(quantity: number, unitPrice: number): number {
   return quantity * unitPrice
@@ -37,7 +37,7 @@ export function validateSale(
   product: Product,
   quantity: number,
   currentStock: number,
-  paymentType: 'cash' | 'credit',
+  paymentType: PaymentType,
   customerId: string | null,
 ): SaleValidationResult {
   if (quantity <= 0 || !Number.isInteger(quantity)) {

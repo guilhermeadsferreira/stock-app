@@ -8,6 +8,8 @@ import { useSettings } from '@/application/hooks/useSettings'
 import { useBusiness } from '@/application/hooks/useBusiness'
 import { useAuth } from '@/application/hooks/useAuth'
 import { useAuthStore } from '@/application/stores/authStore'
+import { supabase } from '@/infrastructure/supabase/client'
+import { BusinessRepository } from '@/infrastructure/supabase/BusinessRepository'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -20,20 +22,43 @@ const schema = z.object({
 })
 type FormValues = z.output<typeof schema>
 
+const profileSchema = z.object({
+  name: z.string().min(1, 'Nome obrigatório'),
+})
+type ProfileForm = z.output<typeof profileSchema>
+
+const passwordSchema = z.object({
+  password: z.string().min(6, 'Mínimo 6 caracteres'),
+  confirmPassword: z.string().min(6, 'Mínimo 6 caracteres'),
+}).refine(d => d.password === d.confirmPassword, {
+  message: 'Senhas não coincidem',
+  path: ['confirmPassword'],
+})
+type PasswordForm = z.output<typeof passwordSchema>
+
+const businessRepo = new BusinessRepository(supabase)
+
 export function SettingsPage() {
   const { businessName, lowStockThreshold, expirationAlertDays, save } = useSettings()
-  const { signOut } = useAuth()
+  const { signOut, updatePassword } = useAuth()
   const { user, currentBusiness } = useAuthStore()
   const { getInviteCode, regenerateInviteCode, removeMember, listMembers } = useBusiness()
 
   const [members, setMembers] = useState<BusinessMember[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     defaultValues: { businessName, lowStockThreshold, expirationAlertDays },
   })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profileForm = useForm<ProfileForm>({ resolver: zodResolver(profileSchema) as any, defaultValues: { name: '' } })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const passwordForm = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema) as any, defaultValues: { password: '', confirmPassword: '' } })
 
   useEffect(() => {
     form.reset({ businessName, lowStockThreshold, expirationAlertDays })
@@ -47,6 +72,14 @@ export function SettingsPage() {
       .finally(() => setMembersLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    businessRepo.getProfileName(user.id).then(name => {
+      if (name) profileForm.reset({ name })
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   async function onSubmit(values: FormValues) {
     try {
@@ -82,6 +115,32 @@ export function SettingsPage() {
       toast.success('Membro removido')
     } catch {
       toast.error('Erro ao remover membro')
+    }
+  }
+
+  async function onSaveProfile(values: ProfileForm) {
+    if (!user) return
+    setSavingProfile(true)
+    try {
+      await businessRepo.updateProfileName(user.id, values.name)
+      toast.success('Nome atualizado!')
+    } catch {
+      toast.error('Erro ao atualizar nome')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  async function onChangePassword(values: PasswordForm) {
+    setSavingPassword(true)
+    try {
+      await updatePassword(values.password)
+      passwordForm.reset()
+      toast.success('Senha alterada!')
+    } catch {
+      toast.error('Erro ao alterar senha')
+    } finally {
+      setSavingPassword(false)
     }
   }
 
@@ -132,6 +191,63 @@ export function SettingsPage() {
           }
         </form>
       </Form>
+
+      {/* Perfil */}
+      <div className="border-t pt-4 space-y-4">
+        <h2 className="font-semibold">Meu perfil</h2>
+        <Form {...profileForm}>
+          <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-3">
+            <FormField
+              control={profileForm.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl><Input placeholder="Seu nome" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" variant="outline" className="w-full" disabled={savingProfile}>
+              {savingProfile ? 'Salvando...' : 'Salvar nome'}
+            </Button>
+          </form>
+        </Form>
+      </div>
+
+      {/* Senha */}
+      <div className="border-t pt-4 space-y-4">
+        <h2 className="font-semibold">Alterar senha</h2>
+        <Form {...passwordForm}>
+          <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-3">
+            <FormField
+              control={passwordForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nova senha</FormLabel>
+                  <FormControl><Input type="password" placeholder="Mínimo 6 caracteres" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={passwordForm.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirmar senha</FormLabel>
+                  <FormControl><Input type="password" placeholder="Repita a senha" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" variant="outline" className="w-full" disabled={savingPassword}>
+              {savingPassword ? 'Alterando...' : 'Alterar senha'}
+            </Button>
+          </form>
+        </Form>
+      </div>
 
       <div className="border-t pt-4 space-y-4">
         <h2 className="font-semibold">Membros</h2>

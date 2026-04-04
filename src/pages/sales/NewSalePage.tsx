@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuthStore } from '@/application/stores/authStore'
-import type { Product, Customer, CartItem } from '@/domain/types'
+import type { Product, Customer, CartItem, PaymentType } from '@/domain/types'
 
 type Step = 'payment' | 'customer' | 'add-item' | 'cart' | 'confirm'
 
@@ -44,7 +44,7 @@ export function NewSalePage() {
 
   const [step, setStep] = useState<Step>('payment')
   const [cart, setCart] = useState<CartItem[]>([])
-  const [paymentType, setPaymentType] = useState<'cash' | 'credit' | null>(null)
+  const [paymentType, setPaymentType] = useState<PaymentType | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   // add-item sub-state
@@ -95,7 +95,7 @@ export function NewSalePage() {
     if (step === 'add-item') {
       if (selectedProduct) { setSelectedProduct(null); return }
       if (cart.length > 0) { setStep('cart'); return }
-      setStep(paymentType === 'credit' ? 'customer' : 'payment')
+      setStep('payment')
       return
     }
     if (step === 'cart') { setStep('add-item'); return }
@@ -111,9 +111,9 @@ export function NewSalePage() {
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
-  function handlePaymentType(type: 'cash' | 'credit') {
+  function handlePaymentType(type: PaymentType) {
     setPaymentType(type)
-    setStep(type === 'cash' ? 'add-item' : 'customer')
+    setStep(type === 'credit' ? 'customer' : 'add-item')
   }
 
   async function handleSelectProduct(product: Product) {
@@ -200,7 +200,21 @@ export function NewSalePage() {
               className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-green-800 hover:bg-green-100"
             >
               <span className="text-3xl">💵</span>
-              <span className="font-semibold">À Vista</span>
+              <span className="font-semibold">Dinheiro</span>
+            </button>
+            <button
+              onClick={() => handlePaymentType('card')}
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-purple-200 bg-purple-50 p-6 text-purple-800 hover:bg-purple-100"
+            >
+              <span className="text-3xl">💳</span>
+              <span className="font-semibold">Cartão</span>
+            </button>
+            <button
+              onClick={() => handlePaymentType('pix')}
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-teal-200 bg-teal-50 p-6 text-teal-800 hover:bg-teal-100"
+            >
+              <span className="text-3xl">⚡</span>
+              <span className="font-semibold">PIX</span>
             </button>
             <button
               onClick={() => handlePaymentType('credit')}
@@ -416,7 +430,7 @@ export function NewSalePage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Pagamento</span>
               <span className={`font-medium ${paymentType === 'credit' ? 'text-blue-600' : 'text-green-600'}`}>
-                {paymentType === 'cash' ? 'À vista' : 'Fiado'}
+                {{ cash: 'Dinheiro', card: 'Cartão', pix: 'PIX', credit: 'Fiado' }[paymentType!]}
               </span>
             </div>
             {selectedCustomer && (

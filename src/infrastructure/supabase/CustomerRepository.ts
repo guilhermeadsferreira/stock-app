@@ -9,6 +9,8 @@ function mapRow(row: any): Customer {
     businessId: row.business_id,
     name: row.name,
     phone: row.phone ?? null,
+    email: row.email ?? null,
+    notes: row.notes ?? null,
     createdAt: new Date(row.created_at),
   }
 }
@@ -50,6 +52,8 @@ export class CustomerRepository implements ICustomerRepository {
         business_id: customer.businessId,
         name: customer.name,
         phone: customer.phone,
+        email: customer.email,
+        notes: customer.notes,
       })
       .select()
       .single()
@@ -65,6 +69,8 @@ export class CustomerRepository implements ICustomerRepository {
     const updateData: Record<string, unknown> = {}
     if (updates.name !== undefined) updateData.name = updates.name
     if (updates.phone !== undefined) updateData.phone = updates.phone
+    if (updates.email !== undefined) updateData.email = updates.email
+    if (updates.notes !== undefined) updateData.notes = updates.notes
 
     const { data, error } = await this.client
       .from('customers')

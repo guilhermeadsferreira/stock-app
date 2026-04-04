@@ -65,7 +65,7 @@ export function StockPage() {
   ]
 
   return (
-    <div className="space-y-4 px-5 pt-8">
+    <div className="space-y-4 px-5 pt-8 md:px-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Estoque</h1>
         <div className="flex gap-2">

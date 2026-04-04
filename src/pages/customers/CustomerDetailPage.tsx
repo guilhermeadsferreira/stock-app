@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatPhone } from '@/domain/formatters/phone'
 import type { Customer, Sale, CreditPayment } from '@/domain/types'
 
 const customerRepo = new CustomerRepository(supabase)
@@ -85,7 +86,9 @@ export function CustomerDetailPage() {
       {customer && (
         <div>
           <h1 className="text-xl font-bold">{customer.name}</h1>
-          {customer.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
+          {customer.phone && <p className="text-sm text-muted-foreground">{formatPhone(customer.phone)}</p>}
+          {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
+          {customer.notes && <p className="text-sm text-muted-foreground italic">{customer.notes}</p>}
         </div>
       )}
 

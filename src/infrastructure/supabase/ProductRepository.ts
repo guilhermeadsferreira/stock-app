@@ -8,9 +8,11 @@ function mapRow(row: any): Product {
     id: row.id,
     businessId: row.business_id,
     name: row.name,
+    brand: row.brand ?? null,
     barcode: row.barcode ?? null,
     purchasePrice: row.purchase_price,
     salePrice: row.sale_price,
+    notes: row.notes ?? null,
     expirationDate: row.expiration_date ? new Date(row.expiration_date) : null,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -64,9 +66,11 @@ export class ProductRepository implements IProductRepository {
       .insert({
         business_id: product.businessId,
         name: product.name,
+        brand: product.brand,
         barcode: product.barcode,
         purchase_price: product.purchasePrice,
         sale_price: product.salePrice,
+        notes: product.notes,
         expiration_date: product.expirationDate?.toISOString() ?? null,
       })
       .select()
@@ -82,7 +86,9 @@ export class ProductRepository implements IProductRepository {
   ): Promise<Product> {
     const updateData: Record<string, unknown> = {}
     if (data.name !== undefined) updateData.name = data.name
+    if (data.brand !== undefined) updateData.brand = data.brand
     if (data.barcode !== undefined) updateData.barcode = data.barcode
+    if (data.notes !== undefined) updateData.notes = data.notes
     if (data.purchasePrice !== undefined) updateData.purchase_price = data.purchasePrice
     if (data.salePrice !== undefined) updateData.sale_price = data.salePrice
     if (data.expirationDate !== undefined) updateData.expiration_date = data.expirationDate?.toISOString() ?? null

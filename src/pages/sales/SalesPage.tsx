@@ -68,10 +68,12 @@ export function SalesPage() {
 
   const total = sales.reduce((sum, s) => sum + s.totalPrice, 0)
   const cashTotal = sales.filter(s => s.paymentType === 'cash').reduce((sum, s) => sum + s.totalPrice, 0)
+  const cardTotal = sales.filter(s => s.paymentType === 'card').reduce((sum, s) => sum + s.totalPrice, 0)
+  const pixTotal = sales.filter(s => s.paymentType === 'pix').reduce((sum, s) => sum + s.totalPrice, 0)
   const creditTotal = sales.filter(s => s.paymentType === 'credit').reduce((sum, s) => sum + s.totalPrice, 0)
 
   return (
-    <div className="space-y-4 px-5 pt-8 pb-8">
+    <div className="space-y-4 px-5 pt-8 pb-8 md:px-8">
       <h1 className="text-2xl font-bold tracking-tight">Vendas</h1>
 
       {/* Chips de período */}
@@ -99,10 +101,12 @@ export function SalesPage() {
             <span className="text-sm text-muted-foreground">Total</span>
             <span className="text-2xl font-bold text-foreground tracking-tight">{centsToBRL(total)}</span>
           </div>
-          {cashTotal > 0 && creditTotal > 0 && (
-            <div className="flex justify-between text-sm pt-1 border-t border-border/50">
-              <span className="text-green-700">À vista: {centsToBRL(cashTotal)}</span>
-              <span className="text-blue-700">Fiado: {centsToBRL(creditTotal)}</span>
+          {(cashTotal > 0 || cardTotal > 0 || pixTotal > 0 || creditTotal > 0) && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm pt-1 border-t border-border/50">
+              {cashTotal > 0 && <span className="text-green-700">Dinheiro: {centsToBRL(cashTotal)}</span>}
+              {cardTotal > 0 && <span className="text-purple-700">Cartão: {centsToBRL(cardTotal)}</span>}
+              {pixTotal > 0 && <span className="text-teal-700">PIX: {centsToBRL(pixTotal)}</span>}
+              {creditTotal > 0 && <span className="text-blue-700">Fiado: {centsToBRL(creditTotal)}</span>}
             </div>
           )}
         </div>
@@ -142,11 +146,14 @@ export function SalesPage() {
                     <span className="font-bold text-[15px]">{centsToBRL(sale.totalPrice)}</span>
                     <span className={cn(
                       'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                      sale.paymentType === 'cash'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-blue-100 text-blue-700',
+                      {
+                        cash: 'bg-green-100 text-green-700',
+                        card: 'bg-purple-100 text-purple-700',
+                        pix: 'bg-teal-100 text-teal-700',
+                        credit: 'bg-blue-100 text-blue-700',
+                      }[sale.paymentType],
                     )}>
-                      {sale.paymentType === 'cash' ? 'À vista' : 'Fiado'}
+                      {{ cash: 'Dinheiro', card: 'Cartão', pix: 'PIX', credit: 'Fiado' }[sale.paymentType]}
                     </span>
                   </div>
                 </div>

@@ -55,10 +55,9 @@ export function useReports() {
     try {
       const { from, to } = getPeriodRange(period)
 
-      const [products, entries, cashSales, allSales, customers] = await Promise.all([
+      const [products, entries, allSales, customers] = await Promise.all([
         productRepo.list(currentBusiness.id),
         stockRepo.listEntries(currentBusiness.id),
-        saleRepo.listByBusiness(currentBusiness.id, { paymentType: 'cash', from, to }),
         saleRepo.listByBusiness(currentBusiness.id, { from, to }),
         customerRepo.list(currentBusiness.id),
       ])
@@ -80,9 +79,9 @@ export function useReports() {
       const openCreditCustomerCount = customerCreditData.filter(b => b > 0).length
 
       const stockValue = calcStockValue(products, entries)
-      const cashSalesTotal = cashSales.reduce((sum, s) => sum + s.totalPrice, 0)
       const allSalesTotal = allSales.reduce((sum, s) => sum + s.totalPrice, 0)
-      const creditSalesTotal = allSalesTotal - cashSalesTotal
+      const cashSalesTotal = allSales.filter(s => s.paymentType !== 'credit').reduce((sum, s) => sum + s.totalPrice, 0)
+      const creditSalesTotal = allSales.filter(s => s.paymentType === 'credit').reduce((sum, s) => sum + s.totalPrice, 0)
 
       const lowStockProducts = products.filter(p => {
         const qty = entryMap.get(p.id)?.quantity ?? 0
@@ -102,7 +101,7 @@ export function useReports() {
         openCreditCustomerCount,
         lowStockProducts,
         nearExpiryProducts,
-        recentSalesCount: cashSales.length,
+        recentSalesCount: allSales.filter(s => s.paymentType !== 'credit').length,
         stockEntries: entries,
       })
     } finally {
