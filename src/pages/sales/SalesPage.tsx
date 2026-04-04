@@ -52,7 +52,6 @@ function getPeriodRange(period: Period): { from: Date; to: Date } {
   }
 }
 
-const paymentLabel: Record<string, string> = { cash: 'Dinheiro', card: 'Cartão', pix: 'PIX', credit: 'Fiado' }
 const statusLabel: Record<string, string> = { paid: 'Pago', pending: 'Pendente' }
 const statusBadge: Record<string, string> = {
   paid: 'bg-green-100 text-green-700',
