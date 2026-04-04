@@ -24,6 +24,15 @@ export function ProtectedRoute({ children }: Props) {
     return <Navigate to="/login" replace />
   }
 
+  // businesses === null significa que ainda não carregou — mantém spinner
+  if (businesses === null) {
+    return (
+      <div className="flex h-dvh items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
   if (businesses.length === 0) {
     return <Navigate to="/onboarding" replace />
   }

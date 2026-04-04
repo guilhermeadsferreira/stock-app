@@ -18,7 +18,7 @@ export function OnboardingPage() {
     if (!isLoading && currentBusiness) {
       navigate('/', { replace: true })
     }
-    if (!isLoading && !currentBusiness && businesses.length > 0) {
+    if (!isLoading && !currentBusiness && (businesses?.length ?? 0) > 0) {
       // Tem empresas mas nenhuma selecionada — vai para tela de seleção
       navigate('/companies', { replace: true })
     }
