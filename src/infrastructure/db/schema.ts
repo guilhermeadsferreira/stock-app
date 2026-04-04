@@ -103,16 +103,17 @@ export const customers = stockSchema.table('customers', {
 export const sales = stockSchema.table('sales', {
   id: uuid('id').primaryKey().defaultRandom(),
   businessId: uuid('business_id').notNull(),
-  productId: uuid('product_id').notNull().references(() => products.id),
-  quantity: integer('quantity').notNull(),
-  unitPrice: integer('unit_price').notNull(),               // centavos
-  totalPrice: integer('total_price').notNull(),             // centavos
-  purchasePriceSnapshot: integer('purchase_price_snapshot').notNull(), // centavos
+  totalPrice: integer('total_price').notNull(),             // centavos — soma dos itens
   paymentType: paymentTypeEnum('payment_type').notNull(),
   customerId: uuid('customer_id').references(() => customers.id),
   sellerId: uuid('seller_id'),
   status: text('status').notNull().default('paid'), // 'paid' | 'pending'
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  // Campos legados (mantidos por compatibilidade, nullable)
+  productId: uuid('product_id').references(() => products.id),
+  quantity: integer('quantity'),
+  unitPrice: integer('unit_price'),
+  purchasePriceSnapshot: integer('purchase_price_snapshot'),
 }, (t) => [
   index('sales_business_id_idx').on(t.businessId),
   index('sales_customer_id_idx').on(t.customerId),

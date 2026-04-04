@@ -4,19 +4,11 @@ import { SaleRepository } from '@/infrastructure/supabase/SaleRepository'
 import { StockRepository } from '@/infrastructure/supabase/StockRepository'
 import { useAuthStore } from '@/application/stores/authStore'
 import { calcSaleTotal, validateSale } from '@/domain/rules/sale.rules'
-import type { Sale, Product, PaymentType, CartItem, SaleStatus } from '@/domain/types'
+import type { Sale, PaymentType, CartItem, SaleStatus } from '@/domain/types'
 import type { SaleFilters } from '@/domain/repositories/ISaleRepository'
 
 const saleRepo = new SaleRepository(supabase)
 const stockRepo = new StockRepository(supabase)
-
-export interface CreateSaleInput {
-  product: Product
-  quantity: number
-  unitPrice: number   // centavos
-  paymentType: PaymentType
-  customerId: string | null
-}
 
 function deriveSaleStatus(paymentType: PaymentType): SaleStatus {
   return paymentType === 'credit' ? 'pending' : 'paid'
@@ -31,7 +23,7 @@ export function useSales() {
     if (!currentBusiness) return
     setLoading(true)
     try {
-      const data = await saleRepo.listByBusiness(currentBusiness.id, filters)
+      const data = await saleRepo.listByBusinessWithItems(currentBusiness.id, filters)
       setSales(data)
     } finally {
       setLoading(false)
@@ -39,70 +31,21 @@ export function useSales() {
   }, [currentBusiness])
 
   /**
-   * Ponto central de criação de vendas.
-   * Executa sequencialmente: insert sale → insert movement → decrement stock.
+   * Cria uma venda com múltiplos itens (carrinho).
+   * Fluxo: valida tudo → cria 1 sale + N sale_items → N movements → N decrements.
+   *
+   * Este é o ÚNICO caminho de escrita que decrementa estoque.
    */
-  const createSale = useCallback(async (input: CreateSaleInput): Promise<Sale> => {
-    if (!currentBusiness) throw new Error('Sem empresa ativa')
-
-    const currentEntry = await stockRepo.getEntry(currentBusiness.id, input.product.id)
-    const currentQty = currentEntry?.quantity ?? 0
-
-    const validation = validateSale(
-      input.product,
-      input.quantity,
-      currentQty,
-      input.paymentType,
-      input.customerId,
-    )
-    if (!validation.valid) throw new Error(validation.error)
-
-    const totalPrice = calcSaleTotal(input.quantity, input.unitPrice)
-
-    // 1. Registra a venda
-    const sale = await saleRepo.create({
-      businessId: currentBusiness.id,
-      productId: input.product.id,
-      quantity: input.quantity,
-      unitPrice: input.unitPrice,
-      totalPrice,
-      purchasePriceSnapshot: input.product.purchasePrice,
-      paymentType: input.paymentType,
-      customerId: input.customerId,
-      sellerId: user?.id ?? null,
-      status: deriveSaleStatus(input.paymentType),
-    })
-
-    // 2. Registra a movimentação de saída
-    await stockRepo.addMovement({
-      businessId: currentBusiness.id,
-      productId: input.product.id,
-      type: 'out',
-      reason: 'sale',
-      quantity: input.quantity,
-      saleId: sale.id,
-    })
-
-    // 3. Decrementa o estoque
-    await stockRepo.decrementEntry(currentBusiness.id, input.product.id, input.quantity)
-
-    return sale
-  }, [currentBusiness])
-
-  /**
-   * Cria múltiplas vendas de uma vez (carrinho).
-   * Fase 1: valida todos os itens sem escrever nada.
-   * Fase 2: grava sequencialmente só se tudo passou.
-   * Produtos duplicados no carrinho têm estoques somados na validação.
-   */
-  const createSalesBatch = useCallback(async (
+  const createSale = useCallback(async (
     items: CartItem[],
     paymentType: PaymentType,
     customerId: string | null,
-  ): Promise<void> => {
+  ): Promise<Sale> => {
     if (!currentBusiness) throw new Error('Sem empresa ativa')
+    if (items.length === 0) throw new Error('Carrinho vazio')
 
-    // Fase 1 — pré-validação: agrupa qtd por produto para checar estoque real
+    // ─── Fase 1: pré-validação sem escrever nada ──────────────────────────
+    // Agrupa qty por produto para checar estoque real (itens duplicados somam)
     const qtyByProduct = new Map<string, number>()
     for (const item of items) {
       qtyByProduct.set(item.product.id, (qtyByProduct.get(item.product.id) ?? 0) + item.quantity)
@@ -116,21 +59,28 @@ export function useSales() {
       if (!validation.valid) throw new Error(validation.error)
     }
 
-    // Fase 2 — escrita sequencial
+    // ─── Fase 2: escrita ──────────────────────────────────────────────────
+    const totalPrice = items.reduce((sum, i) => sum + calcSaleTotal(i.quantity, i.unitPrice), 0)
+
+    // 1. Cria sale (header) + sale_items
+    const sale = await saleRepo.createWithItems({
+      businessId: currentBusiness.id,
+      totalPrice,
+      paymentType,
+      customerId,
+      sellerId: user?.id ?? null,
+      status: deriveSaleStatus(paymentType),
+      items: items.map(i => ({
+        productId: i.product.id,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        unitCost: i.product.purchasePrice,
+        discountPct: 0,
+      })),
+    })
+
+    // 2. Movimentações de saída + decremento de estoque (por produto)
     for (const item of items) {
-      const totalPrice = calcSaleTotal(item.quantity, item.unitPrice)
-      const sale = await saleRepo.create({
-        businessId: currentBusiness.id,
-        productId: item.product.id,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice,
-        purchasePriceSnapshot: item.product.purchasePrice,
-        paymentType,
-        customerId,
-        sellerId: user?.id ?? null,
-        status: deriveSaleStatus(paymentType),
-      })
       await stockRepo.addMovement({
         businessId: currentBusiness.id,
         productId: item.product.id,
@@ -141,7 +91,9 @@ export function useSales() {
       })
       await stockRepo.decrementEntry(currentBusiness.id, item.product.id, item.quantity)
     }
-  }, [currentBusiness])
 
-  return { sales, loading, load, createSale, createSalesBatch }
+    return sale
+  }, [currentBusiness, user])
+
+  return { sales, loading, load, createSale }
 }

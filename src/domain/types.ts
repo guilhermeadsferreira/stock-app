@@ -96,16 +96,18 @@ export type SaleStatus = 'paid' | 'pending'
 export interface Sale {
   id: string
   businessId: string
-  productId: string
-  quantity: number
-  unitPrice: number               // centavos — preço cobrado no momento
-  totalPrice: number              // centavos — quantity * unitPrice
-  purchasePriceSnapshot: number   // centavos — custo no momento da venda
+  totalPrice: number              // centavos — soma de todos os itens
   paymentType: PaymentType
   customerId: string | null       // obrigatório quando paymentType === 'credit'
   sellerId: string | null
   status: SaleStatus
   createdAt: Date
+  items?: SaleItem[]              // carregados sob demanda
+  // Campos legados (vendas antigas sem sale_items)
+  productId?: string | null
+  quantity?: number | null
+  unitPrice?: number | null
+  purchasePriceSnapshot?: number | null
 }
 
 export interface SaleItem {
