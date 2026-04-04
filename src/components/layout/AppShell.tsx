@@ -16,7 +16,7 @@ export function AppShell() {
       {/* Main content */}
       <div className="flex flex-1 flex-col lg:pl-60">
         {currentBusiness && (
-          <header className="border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-40 lg:hidden">
+          <header className="border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-40 lg:hidden">
             <button
               onClick={() => navigate('/companies')}
               className="flex w-full items-center gap-2 px-4 py-2.5 text-left"
@@ -28,7 +28,7 @@ export function AppShell() {
           </header>
         )}
 
-        <main className="flex-1 pb-24 lg:pb-6">
+        <main className="flex-1 pb-24 lg:pb-6 overflow-x-hidden">
           <div className="mx-auto max-w-4xl">
             <Outlet />
           </div>
