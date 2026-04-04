@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
@@ -8,11 +8,11 @@ import { BarcodeScanner } from '@/components/stock/BarcodeScanner'
 export function StockScanPage() {
   const navigate = useNavigate()
   const { findByBarcode } = useProducts()
-  const [looking, setLooking] = useState(false)
+  const lookingRef = useRef(false)
 
   const handleResult = useCallback(async (code: string) => {
-    if (looking) return
-    setLooking(true)
+    if (lookingRef.current) return
+    lookingRef.current = true
     try {
       const product = await findByBarcode(code)
       if (product) {
@@ -22,9 +22,9 @@ export function StockScanPage() {
       }
     } catch {
       toast.error('Erro ao buscar produto')
-      setLooking(false)
+      lookingRef.current = false
     }
-  }, [looking, findByBarcode, navigate])
+  }, [findByBarcode, navigate])
 
   return (
     <div className="space-y-4 px-4 pt-6">
@@ -44,12 +44,6 @@ export function StockScanPage() {
         onResult={handleResult}
         onClose={() => navigate('/stock')}
       />
-
-      {looking && (
-        <p className="text-center text-sm text-muted-foreground animate-pulse">
-          Buscando produto...
-        </p>
-      )}
     </div>
   )
 }

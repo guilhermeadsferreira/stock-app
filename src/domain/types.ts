@@ -9,7 +9,7 @@ export type MovementReason =
   | 'loss'        // perda / vencimento
   | 'return'      // devolução
 
-export type PaymentType = 'cash' | 'credit'
+export type PaymentType = 'cash' | 'credit' | 'card' | 'pix'
 
 // ─── Entities ────────────────────────────────────────────────────────────────
 
@@ -32,6 +32,7 @@ export interface BusinessMember {
 export interface UserProfile {
   id: string
   email: string
+  name: string | null
   businessId: string | null
   createdAt: Date
 }
@@ -49,9 +50,11 @@ export interface Product {
   id: string
   businessId: string
   name: string
+  brand: string | null
   barcode: string | null
   purchasePrice: number  // centavos
   salePrice: number      // centavos
+  notes: string | null
   expirationDate: Date | null
   createdAt: Date
   updatedAt: Date
@@ -82,6 +85,8 @@ export interface Customer {
   businessId: string
   name: string
   phone: string | null
+  email: string | null
+  notes: string | null
   createdAt: Date
 }
 

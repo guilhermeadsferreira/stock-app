@@ -20,7 +20,7 @@ export function ReportsPage() {
   useEffect(() => { load(period) }, [load, period])
 
   return (
-    <div className="space-y-4 px-5 pt-8 pb-8">
+    <div className="space-y-4 px-5 pt-8 pb-8 md:px-8">
       <h1 className="text-2xl font-bold tracking-tight">Relatórios</h1>
 
       {/* Valor em estoque */}

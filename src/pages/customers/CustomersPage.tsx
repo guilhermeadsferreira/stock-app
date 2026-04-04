@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { cn } from '@/lib/utils'
+import { formatPhone } from '@/domain/formatters/phone'
 import type { Customer } from '@/domain/types'
 
 const customerRepo = new CustomerRepository(supabase)
@@ -32,6 +33,8 @@ interface CustomerWithBalance extends Customer {
 const newCustomerSchema = z.object({
   name: z.string().min(2, 'Nome obrigatório'),
   phone: z.string().optional(),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
+  notes: z.string().optional(),
 })
 type NewCustomerForm = z.output<typeof newCustomerSchema>
 
@@ -97,7 +100,7 @@ export function CustomersPage() {
   async function handleCreate(values: NewCustomerForm) {
     setSubmitting(true)
     try {
-      const customer = await create(values.name, values.phone || undefined)
+      const customer = await create(values.name, values.phone || undefined, values.email || undefined, values.notes || undefined)
       setAllCustomers(prev => [{ ...customer, balance: 0 }, ...prev])
       setDialogOpen(false)
       form.reset()
@@ -110,7 +113,7 @@ export function CustomersPage() {
   }
 
   return (
-    <div className="space-y-4 px-5 pt-8 pb-8">
+    <div className="space-y-4 px-5 pt-8 pb-8 md:px-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
         <button
@@ -177,7 +180,7 @@ export function CustomersPage() {
             >
               <div>
                 <p className="font-semibold text-[15px]">{c.name}</p>
-                {c.phone && <p className="text-sm text-muted-foreground mt-0.5">{c.phone}</p>}
+                {c.phone && <p className="text-sm text-muted-foreground mt-0.5">{formatPhone(c.phone)}</p>}
               </div>
               <div className="flex items-center gap-2">
                 {c.balance > 0 && (
@@ -220,6 +223,32 @@ export function CustomersPage() {
                     <FormLabel>Telefone (opcional)</FormLabel>
                     <FormControl>
                       <Input placeholder="(00) 00000-0000" inputMode="tel" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="email@exemplo.com" inputMode="email" type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: compra sempre no início do mês" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

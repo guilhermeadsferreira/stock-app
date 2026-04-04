@@ -21,7 +21,7 @@ export const movementReasonEnum = stockSchema.enum('movement_reason', [
   'loss',
   'return',
 ])
-export const paymentTypeEnum = stockSchema.enum('payment_type', ['cash', 'credit'])
+export const paymentTypeEnum = stockSchema.enum('payment_type', ['cash', 'credit', 'card', 'pix'])
 
 // ─── Tables ──────────────────────────────────────────────────────────────────
 
@@ -40,6 +40,7 @@ export const businesses = stockSchema.table('businesses', {
 export const userProfiles = stockSchema.table('user_profiles', {
   id: uuid('id').primaryKey(),  // mesmo UUID do auth.users
   email: text('email').notNull().default(''),
+  name: text('name'),
   businessId: uuid('business_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
@@ -48,9 +49,11 @@ export const products = stockSchema.table('products', {
   id: uuid('id').primaryKey().defaultRandom(),
   businessId: uuid('business_id').notNull(),
   name: text('name').notNull(),
+  brand: text('brand'),
   barcode: text('barcode'),
   purchasePrice: integer('purchase_price').notNull(),   // centavos
   salePrice: integer('sale_price').notNull(),            // centavos
+  notes: text('notes'),
   expirationDate: timestamp('expiration_date', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -89,6 +92,8 @@ export const customers = stockSchema.table('customers', {
   businessId: uuid('business_id').notNull(),
   name: text('name').notNull(),
   phone: text('phone'),
+  email: text('email'),
+  notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('customers_business_id_idx').on(t.businessId),

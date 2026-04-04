@@ -189,6 +189,9 @@ export function ProductDetailPage() {
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold">{product.name}</h1>
+            {product.brand && (
+              <p className="text-sm text-muted-foreground">{product.brand}</p>
+            )}
             {product.barcode && (
               <p className="text-sm text-muted-foreground font-mono">{product.barcode}</p>
             )}
@@ -198,7 +201,7 @@ export function ProductDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
           <div>
             <p className="text-muted-foreground">Preço de venda</p>
             <p className="font-semibold">{centsToBRL(product.salePrice)}</p>
@@ -230,6 +233,9 @@ export function ProductDetailPage() {
             </div>
           )}
         </div>
+        {product.notes && (
+          <p className="text-sm text-muted-foreground italic">{product.notes}</p>
+        )}
         <Button variant="outline" size="sm" className="w-full" onClick={openPriceDialog}>
           <Pencil className="mr-2 h-3.5 w-3.5" />
           Editar preços

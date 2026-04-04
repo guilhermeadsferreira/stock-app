@@ -147,6 +147,24 @@ export class BusinessRepository implements IBusinessRepository {
     }))
   }
 
+  async updateProfileName(userId: string, name: string): Promise<void> {
+    const { error } = await this.client
+      .from('user_profiles')
+      .update({ name })
+      .eq('id', userId)
+    if (error) throw new Error(error.message)
+  }
+
+  async getProfileName(userId: string): Promise<string | null> {
+    const { data, error } = await this.client
+      .from('user_profiles')
+      .select('name')
+      .eq('id', userId)
+      .single()
+    if (error || !data) return null
+    return data.name ?? null
+  }
+
   async update(
     businessId: string,
     data: Partial<Pick<Business, 'name' | 'lowStockThreshold' | 'expirationAlertDays'>>,

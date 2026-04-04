@@ -15,11 +15,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 
 const schema = z.object({
   name: z.string().min(1, 'Nome obrigatório'),
+  brand: z.string().optional(),
   barcode: z.string().optional(),
   purchasePrice: z.coerce.number().min(0.01, 'Preço obrigatório'),
   salePrice: z.coerce.number().min(0.01, 'Preço obrigatório'),
   expirationDate: z.string().optional(),
   quantity: z.coerce.number().int().min(0),
+  notes: z.string().optional(),
 })
 type FormValues = z.output<typeof schema>
 
@@ -32,7 +34,7 @@ export function NewProductPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    defaultValues: { name: '', barcode: searchParams.get('barcode') ?? '', purchasePrice: 0, salePrice: 0, expirationDate: '', quantity: 0 },
+    defaultValues: { name: '', brand: '', barcode: searchParams.get('barcode') ?? '', purchasePrice: 0, salePrice: 0, expirationDate: '', quantity: 0, notes: '' },
   })
 
   async function onSubmit(values: FormValues) {
@@ -41,7 +43,9 @@ export function NewProductPage() {
       await create(
         {
           name: values.name,
+          brand: values.brand || null,
           barcode: values.barcode || null,
+          notes: values.notes || null,
           purchasePrice: floatToCents(values.purchasePrice),
           salePrice: floatToCents(values.salePrice),
           expirationDate: values.expirationDate ? new Date(values.expirationDate + 'T00:00:00') : null,
@@ -74,6 +78,18 @@ export function NewProductPage() {
               <FormItem>
                 <FormLabel>Nome do produto *</FormLabel>
                 <FormControl><Input placeholder="Ex: Coca-Cola 350ml" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="brand"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Marca</FormLabel>
+                <FormControl><Input placeholder="Ex: Coca-Cola" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -157,6 +173,18 @@ export function NewProductPage() {
                 <FormControl>
                   <Input type="number" min="0" inputMode="numeric" onFocus={(e) => e.target.select()} {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}

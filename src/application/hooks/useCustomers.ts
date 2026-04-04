@@ -25,14 +25,16 @@ export function useCustomers() {
   const create = useCallback(async (
     name: string,
     phone?: string,
+    email?: string,
+    notes?: string,
   ): Promise<Customer> => {
     if (!currentBusiness) throw new Error('Sem empresa ativa')
-    return customerRepo.create({ businessId: currentBusiness.id, name, phone: phone ?? null })
+    return customerRepo.create({ businessId: currentBusiness.id, name, phone: phone ?? null, email: email ?? null, notes: notes ?? null })
   }, [currentBusiness])
 
   const update = useCallback(async (
     customerId: string,
-    data: { name?: string; phone?: string },
+    data: { name?: string; phone?: string; email?: string; notes?: string },
   ): Promise<Customer> => {
     if (!currentBusiness) throw new Error('Sem empresa ativa')
     return customerRepo.update(currentBusiness.id, customerId, data)

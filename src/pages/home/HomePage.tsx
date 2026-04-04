@@ -23,7 +23,7 @@ export function HomePage() {
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
 
   return (
-    <div className="px-5 pt-8 pb-6 space-y-5">
+    <div className="px-5 pt-8 pb-6 space-y-5 md:px-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -96,7 +96,7 @@ export function HomePage() {
       )}
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryCard
           icon={<Package className="h-4 w-4 text-primary" strokeWidth={1.75} />}
           label="Valor em estoque"
