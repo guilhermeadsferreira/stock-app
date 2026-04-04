@@ -104,7 +104,7 @@ export function CartPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 space-y-4 px-4 pt-6 pb-32">
+      <div className="flex-1 space-y-4 px-5 pt-6 pb-32 md:px-8">
         {/* Header */}
         <button onClick={() => navigate('/')} className="flex items-center gap-1 text-sm text-muted-foreground">
           <ArrowLeft className="h-4 w-4" />
@@ -144,7 +144,7 @@ export function CartPage() {
                   onClick={() => handleAddProduct(p)}
                   disabled={isOutOfStock || isMaxed}
                   className={`flex w-full items-center justify-between rounded-xl border border-border p-3 text-left ${
-                    isOutOfStock || isMaxed ? 'bg-muted opacity-50' : 'bg-white'
+                    isOutOfStock || isMaxed ? 'bg-muted opacity-50' : 'bg-card'
                   }`}
                 >
                   <div>
@@ -173,7 +173,7 @@ export function CartPage() {
 
             <div className="space-y-2">
               {items.map(item => (
-                <div key={item.product.id} className="rounded-xl border border-border bg-white p-3">
+                <div key={item.product.id} className="rounded-xl border border-border bg-card p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{item.product.name}</p>
@@ -253,7 +253,7 @@ export function CartPage() {
 
       {/* Fixed footer */}
       {items.length > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 border-t bg-background px-4 py-3">
+        <div className="fixed bottom-16 left-0 right-0 border-t bg-background px-5 py-3 lg:left-60 md:px-8">
           <div className="flex items-center justify-between mb-2">
             <span className="font-semibold">Total</span>
             <span className="text-lg font-bold text-primary">{centsToBRL(total())}</span>

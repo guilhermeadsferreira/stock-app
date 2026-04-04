@@ -45,18 +45,18 @@ export function ReportsPage() {
           </div>
           {loading
             ? <Skeleton className="h-8 w-32" />
-            : <p className="text-3xl font-bold text-emerald-700 leading-none tracking-tight">{centsToBRL(data?.allSalesTotal ?? 0)}</p>
+            : <p className="text-3xl font-bold text-success leading-none tracking-tight">{centsToBRL(data?.allSalesTotal ?? 0)}</p>
           }
           {/* Breakdown à vista / fiado */}
           {!loading && (data?.allSalesTotal ?? 0) > 0 && (
             <div className="flex gap-3 pt-1 border-t border-border/50">
               <div className="flex-1 rounded-xl bg-muted/60 px-3 py-2.5">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1">À vista</p>
-                <p className="text-sm font-bold text-green-700">{centsToBRL(data?.cashSalesTotal ?? 0)}</p>
+                <p className="text-sm font-bold text-payment-cash">{centsToBRL(data?.cashSalesTotal ?? 0)}</p>
               </div>
               <div className="flex-1 rounded-xl bg-muted/60 px-3 py-2.5">
                 <p className="text-[10px] font-medium text-muted-foreground mb-1">Fiado vendido</p>
-                <p className="text-sm font-bold text-blue-700">{centsToBRL(data?.creditSalesTotal ?? 0)}</p>
+                <p className="text-sm font-bold text-credit">{centsToBRL(data?.creditSalesTotal ?? 0)}</p>
               </div>
             </div>
           )}
@@ -76,16 +76,16 @@ export function ReportsPage() {
 
         {/* Estoque baixo */}
         {!loading && (data?.lowStockProducts.length ?? 0) > 0 && (
-          <div className="rounded-2xl border-l-[3px] border-amber-400 bg-amber-50 p-4 space-y-2">
-            <p className="font-semibold text-sm text-amber-900">Estoque baixo</p>
+          <div className="rounded-2xl border-l-[3px] border-warning bg-warning-surface p-4 space-y-2">
+            <p className="font-semibold text-sm text-foreground">Estoque baixo</p>
             {data!.lowStockProducts.map(p => (
               <button
                 key={p.id}
                 onClick={() => navigate(`/stock/${p.id}`)}
-                className="flex w-full items-center justify-between rounded-xl bg-white px-3 py-2.5 text-sm shadow-sm"
+                className="flex w-full items-center justify-between rounded-xl bg-card px-3 py-2.5 text-sm shadow-sm"
               >
                 <span className="font-medium">{p.name}</span>
-                <span className="text-amber-600 font-semibold text-xs">Ver →</span>
+                <span className="text-warning font-semibold text-xs">Ver →</span>
               </button>
             ))}
           </div>
@@ -93,16 +93,16 @@ export function ReportsPage() {
 
         {/* Próximos ao vencimento */}
         {!loading && (data?.nearExpiryProducts.length ?? 0) > 0 && (
-          <div className="rounded-2xl border-l-[3px] border-red-400 bg-red-50 p-4 space-y-2">
-            <p className="font-semibold text-sm text-red-900">Próximos ao vencimento</p>
+          <div className="rounded-2xl border-l-[3px] border-danger bg-danger-surface p-4 space-y-2">
+            <p className="font-semibold text-sm text-foreground">Próximos ao vencimento</p>
             {data!.nearExpiryProducts.map(p => (
               <button
                 key={p.id}
                 onClick={() => navigate(`/stock/${p.id}`)}
-                className="flex w-full items-center justify-between rounded-xl bg-white px-3 py-2.5 text-sm shadow-sm"
+                className="flex w-full items-center justify-between rounded-xl bg-card px-3 py-2.5 text-sm shadow-sm"
               >
                 <span className="font-medium">{p.name}</span>
-                <span className="text-red-600 font-semibold text-xs">
+                <span className="text-danger font-semibold text-xs">
                   {p.expirationDate ? formatExpiryLabel(p.expirationDate) : ''}
                 </span>
               </button>

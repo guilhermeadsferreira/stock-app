@@ -13,7 +13,7 @@ export function BottomNav() {
   const navigate = useNavigate()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-white/88 backdrop-blur-md pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-card/90 backdrop-blur-md pb-safe">
       <div className="mx-auto flex max-w-lg items-center px-1">
         {tabs.slice(0, 2).map((tab) => (
           <NavTab key={tab.to} {...tab} />
@@ -23,7 +23,7 @@ export function BottomNav() {
         <button
           onClick={() => navigate('/sales/new')}
           aria-label="Nova venda"
-          className="relative -top-4 mx-2 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-all duration-200"
+          className="relative -top-4 mx-2 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 active:scale-95 transition-all duration-200"
         >
           <Plus className="h-6 w-6" strokeWidth={2.5} />
         </button>

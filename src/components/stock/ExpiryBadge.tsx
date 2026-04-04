@@ -13,7 +13,7 @@ export function ExpiryBadge({ expirationDate, alertDays }: Props) {
     return (
       <span className={cn(
         'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold',
-        'bg-red-100 text-red-700',
+        'bg-danger-surface text-danger',
       )}>
         Vencido
       </span>
@@ -25,7 +25,7 @@ export function ExpiryBadge({ expirationDate, alertDays }: Props) {
     return (
       <span className={cn(
         'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold',
-        'bg-amber-100 text-amber-700',
+        'bg-warning-surface text-warning',
       )}>
         {days}d
       </span>

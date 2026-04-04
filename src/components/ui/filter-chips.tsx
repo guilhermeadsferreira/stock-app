@@ -43,7 +43,7 @@ export function FilterChips<T extends string>({
           className={cn(
             'rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors',
             value === opt.value
-              ? 'bg-foreground text-background'
+              ? 'bg-primary text-primary-foreground'
               : 'bg-card text-muted-foreground border border-border/60',
           )}
         >

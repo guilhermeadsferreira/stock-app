@@ -105,7 +105,7 @@ export function CheckoutPage() {
   if (items.length === 0) return null
 
   return (
-    <div className="space-y-4 px-4 pt-6 pb-8">
+    <div className="space-y-4 px-5 pt-6 pb-8 md:px-8">
       {/* Header */}
       <button onClick={() => navigate('/sales/new')} className="flex items-center gap-1 text-sm text-muted-foreground">
         <ArrowLeft className="h-4 w-4" />
@@ -114,7 +114,7 @@ export function CheckoutPage() {
       <h1 className="text-xl font-bold">Pagamento</h1>
 
       {/* Items summary */}
-      <div className="rounded-xl border border-border bg-white p-4 space-y-2">
+      <div className="rounded-xl border border-border bg-card p-4 space-y-2">
         <button
           onClick={() => setItemsExpanded(!itemsExpanded)}
           className="flex w-full items-center justify-between"
@@ -153,8 +153,8 @@ export function CheckoutPage() {
           onClick={() => handlePaymentType('cash')}
           className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 ${
             paymentType === 'cash'
-              ? 'border-green-500 bg-green-100 text-green-800'
-              : 'border-green-200 bg-green-50 text-green-800 hover:bg-green-100'
+              ? 'border-payment-cash bg-payment-cash-surface text-payment-cash'
+              : 'border-payment-cash/20 bg-payment-cash-surface/50 text-payment-cash hover:bg-payment-cash-surface'
           }`}
         >
           <span className="text-3xl">💵</span>
@@ -164,8 +164,8 @@ export function CheckoutPage() {
           onClick={() => handlePaymentType('card')}
           className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 ${
             paymentType === 'card'
-              ? 'border-purple-500 bg-purple-100 text-purple-800'
-              : 'border-purple-200 bg-purple-50 text-purple-800 hover:bg-purple-100'
+              ? 'border-payment-card bg-payment-card-surface text-payment-card'
+              : 'border-payment-card/20 bg-payment-card-surface/50 text-payment-card hover:bg-payment-card-surface'
           }`}
         >
           <span className="text-3xl">💳</span>
@@ -175,8 +175,8 @@ export function CheckoutPage() {
           onClick={() => handlePaymentType('pix')}
           className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 ${
             paymentType === 'pix'
-              ? 'border-teal-500 bg-teal-100 text-teal-800'
-              : 'border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100'
+              ? 'border-payment-pix bg-payment-pix-surface text-payment-pix'
+              : 'border-payment-pix/20 bg-payment-pix-surface/50 text-payment-pix hover:bg-payment-pix-surface'
           }`}
         >
           <span className="text-3xl">⚡</span>
@@ -186,8 +186,8 @@ export function CheckoutPage() {
           onClick={() => handlePaymentType('credit')}
           className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 ${
             paymentType === 'credit'
-              ? 'border-blue-500 bg-blue-100 text-blue-800'
-              : 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100'
+              ? 'border-credit bg-credit-surface text-credit'
+              : 'border-credit/20 bg-credit-surface/50 text-credit hover:bg-credit-surface'
           }`}
         >
           <span className="text-3xl">📒</span>
@@ -223,7 +223,7 @@ export function CheckoutPage() {
                 key={c.id}
                 onClick={() => setSelectedCustomer(c)}
                 className={`flex w-full items-center justify-between rounded-xl border p-3 text-left ${
-                  selectedCustomer?.id === c.id ? 'border-primary bg-green-50' : 'border-border bg-white'
+                  selectedCustomer?.id === c.id ? 'border-primary bg-success-surface' : 'border-border bg-card'
                 }`}
               >
                 <div>

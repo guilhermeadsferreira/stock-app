@@ -3,10 +3,10 @@ import { cn } from '@/lib/utils'
 type PaymentMethod = 'cash' | 'card' | 'pix' | 'credit'
 
 const colorMap: Record<PaymentMethod, string> = {
-  cash: 'bg-green-100 text-green-700',
-  card: 'bg-purple-100 text-purple-700',
-  pix: 'bg-teal-100 text-teal-700',
-  credit: 'bg-blue-100 text-blue-700',
+  cash: 'bg-payment-cash-surface text-payment-cash',
+  card: 'bg-payment-card-surface text-payment-card',
+  pix: 'bg-payment-pix-surface text-payment-pix',
+  credit: 'bg-credit-surface text-credit',
 }
 
 const labelMap: Record<PaymentMethod, string> = {
