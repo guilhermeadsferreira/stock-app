@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, Package, Users, BarChart2, Settings, Plus } from 'lucide-react'
+import { Home, Package, Users, BarChart2, Settings, Plus, Building2, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/application/stores/authStore'
 
@@ -16,16 +16,21 @@ export function Sidebar() {
   const { currentBusiness } = useAuthStore()
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border/40 bg-background lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-sidebar-dark lg:flex">
       {/* Business name */}
-      <div className="border-b border-border/40 px-5 py-4">
-        <p className="text-sm font-bold tracking-tight truncate">
+      <button
+        onClick={() => navigate('/companies')}
+        className="flex w-full items-center gap-2.5 border-b border-white/10 px-4 py-4 text-left hover:bg-white/5 transition-colors"
+      >
+        <Building2 className="h-4 w-4 text-white/50 shrink-0" />
+        <span className="flex-1 text-sm font-semibold tracking-tight truncate text-white/90">
           {currentBusiness?.name ?? 'Meu negócio'}
-        </p>
-      </div>
+        </span>
+        <ChevronRight className="h-4 w-4 text-white/40 shrink-0" />
+      </button>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-0.5 px-3 py-4">
         {tabs.map(tab => (
           <NavLink
             key={tab.to}
@@ -34,8 +39,8 @@ export function Sidebar() {
             className={({ isActive }) => cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                ? 'bg-white/15 text-white'
+                : 'text-white/55 hover:bg-white/8 hover:text-white/90',
             )}
           >
             <tab.icon className="h-4.5 w-4.5" strokeWidth={1.75} />
@@ -45,10 +50,10 @@ export function Sidebar() {
       </nav>
 
       {/* FAB */}
-      <div className="border-t border-border/40 p-4">
+      <div className="border-t border-white/10 p-4">
         <button
           onClick={() => navigate('/sales/new')}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-sidebar-action py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sidebar-action/85 transition-colors"
         >
           <Plus className="h-4 w-4" strokeWidth={2.5} />
           Nova venda

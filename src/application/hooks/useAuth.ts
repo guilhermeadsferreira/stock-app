@@ -24,8 +24,17 @@ function pickCurrentBusiness(businesses: Business[]): Business | null {
   return businesses[0]
 }
 
+async function loadDisplayName(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('name')
+    .eq('id', userId)
+    .single()
+  return data?.name ?? null
+}
+
 export function useAuthListener() {
-  const { setAuth, setLoading, setBusinesses, setCurrentBusiness } = useAuthStore()
+  const { setAuth, setLoading, setBusinesses, setCurrentBusiness, setDisplayName } = useAuthStore()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -39,21 +48,22 @@ export function useAuthListener() {
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         if (!user) {
-          useAuthStore.setState({ businesses: null, currentBusiness: null, isLoading: false })
+          useAuthStore.setState({ businesses: null, currentBusiness: null, displayName: null, isLoading: false })
         } else if (!useAuthStore.getState().businesses?.length) {
-          // Só busca se businesses é null (não carregou) ou [] (vazio).
-          // Evita re-fetch quando já temos businesses carregadas (refresh de token).
-          // Seta isLoading: true para cobrir re-entries (ex: SIGNED_IN após INITIAL_SESSION).
           useAuthStore.setState({ isLoading: true })
-          const businesses = await loadBusinessesForUser(user.id)
+          const [businesses, displayName] = await Promise.all([
+            loadBusinessesForUser(user.id),
+            loadDisplayName(user.id),
+          ])
           const current = pickCurrentBusiness(businesses)
-          useAuthStore.setState({ businesses, currentBusiness: current, isLoading: false })
+          useAuthStore.setState({ businesses, currentBusiness: current, displayName, isLoading: false })
         } else {
           setLoading(false)
         }
       } else if (event === 'SIGNED_OUT') {
         setBusinesses(null)
         setCurrentBusiness(null)
+        setDisplayName(null)
         localStorage.removeItem(SELECTED_BUSINESS_KEY)
         setLoading(false)
       }
@@ -71,9 +81,20 @@ export function useAuth() {
     if (error) throw error
   }
 
-  async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password })
+  async function signUp(email: string, password: string, name?: string) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: name ? { data: { name } } : undefined,
+    })
     if (error) throw error
+
+    if (name && data.user) {
+      await supabase
+        .from('user_profiles')
+        .update({ name })
+        .eq('id', data.user.id)
+    }
   }
 
   async function signOut() {

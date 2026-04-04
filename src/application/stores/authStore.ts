@@ -7,10 +7,12 @@ interface AuthState {
   session: Session | null
   businesses: Business[] | null
   currentBusiness: Business | null
+  displayName: string | null
   isLoading: boolean
   setAuth: (user: User | null, session: Session | null) => void
   setBusinesses: (businesses: Business[] | null) => void
   setCurrentBusiness: (business: Business | null) => void
+  setDisplayName: (name: string | null) => void
   setLoading: (loading: boolean) => void
 }
 
@@ -19,9 +21,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   businesses: null,
   currentBusiness: null,
+  displayName: null,
   isLoading: true,
   setAuth: (user, session) => set({ user, session }),
   setBusinesses: (businesses) => set({ businesses }),
   setCurrentBusiness: (currentBusiness) => set({ currentBusiness }),
+  setDisplayName: (displayName) => set({ displayName }),
   setLoading: (isLoading) => set({ isLoading }),
 }))

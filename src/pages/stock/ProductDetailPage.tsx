@@ -174,18 +174,18 @@ export function ProductDetailPage() {
     }
   }
 
-  if (loading) return <div className="space-y-4 px-4 pt-6"><Skeleton className="h-32 w-full rounded-xl" /></div>
-  if (!product) return <div className="px-4 pt-6 text-muted-foreground">Produto não encontrado</div>
+  if (loading) return <div className="space-y-4 px-5 pt-6 md:px-8"><Skeleton className="h-32 w-full rounded-xl" /></div>
+  if (!product) return <div className="px-5 pt-6 md:px-8 text-muted-foreground">Produto não encontrado</div>
 
   return (
-    <div className="space-y-4 px-4 pt-6 pb-8">
+    <div className="space-y-4 px-5 pt-6 pb-8 md:px-8">
       <button onClick={() => navigate('/stock')} className="flex items-center gap-1 text-sm text-muted-foreground">
         <ArrowLeft className="h-4 w-4" />
         Produtos
       </button>
 
       {/* Info do produto */}
-      <div className="rounded-xl border border-border bg-white p-4 space-y-3">
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold">{product.name}</h1>
@@ -217,7 +217,7 @@ export function ProductDetailPage() {
               const marginPct = calcMargin(product.salePrice, product.purchasePrice)
               const isNegative = marginValue < 0
               return (
-                <p className={`font-semibold ${isNegative ? 'text-destructive' : 'text-emerald-600'}`}>
+                <p className={`font-semibold ${isNegative ? 'text-destructive' : 'text-success'}`}>
                   {centsToBRL(marginValue)}
                   <span className="ml-1.5 text-xs font-normal text-muted-foreground">
                     ({marginPct.toFixed(1)}%)
@@ -250,7 +250,7 @@ export function ProductDetailPage() {
 
       {/* Ações de estoque: repor + corrigir lado a lado */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-border bg-white p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <h2 className="font-semibold flex items-center gap-2 text-sm">
             <Package className="h-4 w-4" />
             Repor estoque
@@ -277,7 +277,7 @@ export function ProductDetailPage() {
           </Form>
         </div>
 
-        <div className="rounded-xl border border-border bg-white p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <h2 className="font-semibold flex items-center gap-2 text-sm">
             <Pencil className="h-4 w-4" />
             Corrigir estoque
@@ -306,7 +306,7 @@ export function ProductDetailPage() {
       </div>
 
       {/* Ações destrutivas */}
-      <div className="rounded-xl border border-destructive/30 bg-white p-4 space-y-3">
+      <div className="rounded-xl border border-destructive/30 bg-card p-4 space-y-3">
         <h2 className="font-semibold flex items-center gap-2 text-sm text-destructive">
           <Trash2 className="h-4 w-4" />
           Ações destrutivas

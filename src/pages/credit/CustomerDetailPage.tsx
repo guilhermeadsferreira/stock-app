@@ -68,7 +68,7 @@ export function CustomerDetailPage() {
   ].sort((a, b) => b.date.getTime() - a.date.getTime())
 
   return (
-    <div className="space-y-4 px-4 pt-6 pb-8">
+    <div className="space-y-4 px-5 pt-6 pb-8 md:px-8">
       <button onClick={() => navigate('/credit')} className="flex items-center gap-1 text-sm text-muted-foreground">
         <ArrowLeft className="h-4 w-4" />
         Fiado
@@ -81,16 +81,16 @@ export function CustomerDetailPage() {
         </div>
       )}
 
-      <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
-        <p className="text-sm text-blue-700">Saldo devedor</p>
+      <div className="rounded-xl bg-credit-surface border border-credit/20 p-4">
+        <p className="text-sm text-credit">Saldo devedor</p>
         {loading
           ? <Skeleton className="mt-1 h-8 w-32" />
-          : <p className="text-2xl font-bold text-blue-800">{centsToBRL(balance)}</p>
+          : <p className="text-2xl font-bold text-credit">{centsToBRL(balance)}</p>
         }
       </div>
 
       {balance > 0 && (
-        <div className="rounded-xl border border-border bg-white p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <h2 className="font-semibold">Registrar pagamento</h2>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onPayment)} className="space-y-3">
@@ -136,12 +136,12 @@ export function CustomerDetailPage() {
           <p className="text-sm text-muted-foreground">Nenhum registro ainda</p>
         ) : (
           history.map((item, i) => (
-            <div key={i} className={`rounded-xl border p-3 ${item.kind === 'payment' ? 'border-green-200 bg-green-50' : 'border-blue-100 bg-white'}`}>
+            <div key={i} className={`rounded-xl border p-3 ${item.kind === 'payment' ? 'border-success/20 bg-success-surface' : 'border-credit/10 bg-card'}`}>
               <div className="flex justify-between">
-                <p className={`text-sm font-medium ${item.kind === 'payment' ? 'text-green-700' : 'text-gray-800'}`}>
+                <p className={`text-sm font-medium ${item.kind === 'payment' ? 'text-success' : 'text-foreground'}`}>
                   {item.kind === 'payment' ? '✓ Pagamento' : 'Venda no fiado'}
                 </p>
-                <p className={`font-semibold ${item.kind === 'payment' ? 'text-green-700' : 'text-blue-700'}`}>
+                <p className={`font-semibold ${item.kind === 'payment' ? 'text-success' : 'text-credit'}`}>
                   {item.kind === 'payment'
                     ? `- ${centsToBRL(item.data.amount)}`
                     : `+ ${centsToBRL((item.data as Sale).totalPrice)}`

@@ -54,8 +54,8 @@ function getPeriodRange(period: Period): { from: Date; to: Date } {
 
 const statusLabel: Record<string, string> = { paid: 'Pago', pending: 'Pendente' }
 const statusBadge: Record<string, string> = {
-  paid: 'bg-green-100 text-green-700',
-  pending: 'bg-amber-100 text-amber-700',
+  paid: 'bg-success-surface text-success',
+  pending: 'bg-warning-surface text-warning',
 }
 
 export function SalesPage() {
@@ -143,10 +143,10 @@ export function SalesPage() {
             </div>
             {(cashTotal > 0 || cardTotal > 0 || pixTotal > 0 || creditTotal > 0) && (
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm pt-1 border-t border-border/50">
-                {cashTotal > 0 && <span className="text-green-700">Dinheiro: {centsToBRL(cashTotal)}</span>}
-                {cardTotal > 0 && <span className="text-purple-700">Cartão: {centsToBRL(cardTotal)}</span>}
-                {pixTotal > 0 && <span className="text-teal-700">PIX: {centsToBRL(pixTotal)}</span>}
-                {creditTotal > 0 && <span className="text-blue-700">Fiado: {centsToBRL(creditTotal)}</span>}
+                {cashTotal > 0 && <span className="text-payment-cash">Dinheiro: {centsToBRL(cashTotal)}</span>}
+                {cardTotal > 0 && <span className="text-payment-card">Cartão: {centsToBRL(cardTotal)}</span>}
+                {pixTotal > 0 && <span className="text-payment-pix">PIX: {centsToBRL(pixTotal)}</span>}
+                {creditTotal > 0 && <span className="text-credit">Fiado: {centsToBRL(creditTotal)}</span>}
               </div>
             )}
           </div>

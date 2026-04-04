@@ -181,7 +181,7 @@ export function CustomersPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {c.balance > 0 && (
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+                    <span className="rounded-full bg-credit-surface px-3 py-1 text-sm font-semibold text-credit">
                       {centsToBRL(c.balance)}
                     </span>
                   )}

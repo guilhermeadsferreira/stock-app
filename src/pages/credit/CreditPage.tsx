@@ -48,11 +48,11 @@ export function CreditPage() {
   const totalCredit = customersWithBalance.reduce((sum, c) => sum + c.balance, 0)
 
   return (
-    <div className="space-y-4 px-5 pt-8">
+    <div className="space-y-4 px-5 pt-8 md:px-8">
       <h1 className="text-2xl font-bold tracking-tight">Fiado</h1>
 
       {!loading && (
-        <div className="rounded-2xl bg-[#1e3a8a] p-5 text-white">
+        <div className="rounded-2xl bg-credit p-5 text-white">
           <p className="text-sm text-blue-200 font-medium mb-2">Total em aberto</p>
           <p className="text-3xl font-bold text-white leading-none tracking-tight">{centsToBRL(totalCredit)}</p>
           <p className="text-xs text-blue-300 mt-2">
@@ -83,7 +83,7 @@ export function CreditPage() {
                 {c.phone && <p className="text-sm text-muted-foreground mt-0.5">{c.phone}</p>}
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+                <span className="rounded-full bg-credit-surface px-3 py-1 text-sm font-semibold text-credit">
                   {centsToBRL(c.balance)}
                 </span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.75} />
