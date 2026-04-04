@@ -95,5 +95,34 @@ export function useSales() {
     return sale
   }, [currentBusiness, user])
 
-  return { sales, loading, load, createSale }
+  /**
+   * Cancela uma venda e reverte o estoque.
+   * Movements de retorno + incremento ANTES de deletar (precisamos dos items).
+   */
+  const cancelSale = useCallback(async (sale: Sale): Promise<void> => {
+    if (!currentBusiness) throw new Error('Sem empresa ativa')
+
+    const items = sale.items ?? []
+
+    // 1. Reverter estoque para cada item
+    for (const item of items) {
+      await stockRepo.addMovement({
+        businessId: currentBusiness.id,
+        productId: item.productId,
+        type: 'in',
+        reason: 'return',
+        quantity: item.quantity,
+        saleId: sale.id,
+      })
+      await stockRepo.incrementEntry(currentBusiness.id, item.productId, item.quantity)
+    }
+
+    // 2. Deletar a venda (CASCADE deleta sale_items)
+    await saleRepo.deleteSale(sale.id)
+
+    // 3. Remover do state local
+    setSales(prev => prev.filter(s => s.id !== sale.id))
+  }, [currentBusiness])
+
+  return { sales, loading, load, createSale, cancelSale }
 }
