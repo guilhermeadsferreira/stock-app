@@ -13,7 +13,8 @@ import { StockPage } from '@/pages/stock/StockPage'
 import { NewProductPage } from '@/pages/stock/NewProductPage'
 import { StockScanPage } from '@/pages/stock/StockScanPage'
 import { ProductDetailPage } from '@/pages/stock/ProductDetailPage'
-import { NewSalePage } from '@/pages/sales/NewSalePage'
+import { CartPage } from '@/pages/sales/CartPage'
+import { CheckoutPage } from '@/pages/sales/CheckoutPage'
 import { SalesPage } from '@/pages/sales/SalesPage'
 import { CustomersPage } from '@/pages/customers/CustomersPage'
 import { CustomerDetailPage } from '@/pages/customers/CustomerDetailPage'
@@ -60,7 +61,8 @@ export const router = createBrowserRouter([
       { path: 'stock/new', element: <NewProductPage /> },
       { path: 'stock/:productId', element: <ProductDetailPage /> },
       { path: 'sales', element: <SalesPage /> },
-      { path: 'sales/new', element: <NewSalePage /> },
+      { path: 'sales/new', element: <CartPage /> },
+      { path: 'sales/new/checkout', element: <CheckoutPage /> },
       { path: 'customers', element: <CustomersPage /> },
       { path: 'customers/:customerId', element: <CustomerDetailPage /> },
       { path: 'credit', element: <Navigate to="/customers" replace /> },
