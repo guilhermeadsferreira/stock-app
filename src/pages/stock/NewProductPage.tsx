@@ -19,6 +19,7 @@ const schema = z.object({
   barcode: z.string().optional(),
   purchasePrice: z.coerce.number().min(0.01, 'Preço obrigatório'),
   salePrice: z.coerce.number().min(0.01, 'Preço obrigatório'),
+  maxDiscountPct: z.coerce.number().int().min(0).max(100).optional(),
   expirationDate: z.string().optional(),
   quantity: z.coerce.number().int().min(0),
   notes: z.string().optional(),
@@ -28,13 +29,13 @@ type FormValues = z.output<typeof schema>
 export function NewProductPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { create } = useProducts()
+  const { create, findByBarcode } = useProducts()
   const [scanning, setScanning] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    defaultValues: { name: '', brand: '', barcode: searchParams.get('barcode') ?? '', purchasePrice: 0, salePrice: 0, expirationDate: '', quantity: 0, notes: '' },
+    defaultValues: { name: '', brand: '', barcode: searchParams.get('barcode') ?? '', purchasePrice: 0, salePrice: 0, maxDiscountPct: undefined, expirationDate: '', quantity: 0, notes: '' },
   })
 
   async function onSubmit(values: FormValues) {
@@ -46,6 +47,7 @@ export function NewProductPage() {
           brand: values.brand || null,
           barcode: values.barcode || null,
           notes: values.notes || null,
+          maxDiscountPct: values.maxDiscountPct ?? null,
           purchasePrice: floatToCents(values.purchasePrice),
           salePrice: floatToCents(values.salePrice),
           expirationDate: values.expirationDate ? new Date(values.expirationDate + 'T00:00:00') : null,
@@ -103,9 +105,15 @@ export function NewProductPage() {
                 <FormLabel>Código de barras</FormLabel>
                 {scanning ? (
                   <BarcodeScanner
-                    onResult={(code) => {
-                      field.onChange(code)
+                    onResult={async (code) => {
                       setScanning(false)
+                      const existing = await findByBarcode(code)
+                      if (existing) {
+                        toast.info('Produto já cadastrado — abrindo detalhes')
+                        navigate(`/stock/${existing.id}`)
+                        return
+                      }
+                      field.onChange(code)
                       toast.success('Código lido: ' + code)
                     }}
                     onClose={() => setScanning(false)}
@@ -151,6 +159,20 @@ export function NewProductPage() {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="maxDiscountPct"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Desconto máximo (%)</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" max="100" inputMode="numeric" placeholder="Ex: 10" onFocus={(e) => e.target.select()} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

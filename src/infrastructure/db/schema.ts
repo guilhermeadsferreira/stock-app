@@ -54,6 +54,7 @@ export const products = stockSchema.table('products', {
   purchasePrice: integer('purchase_price').notNull(),   // centavos
   salePrice: integer('sale_price').notNull(),            // centavos
   notes: text('notes'),
+  maxDiscountPct: integer('max_discount_pct'),  // percentual inteiro (0-100), null = sem limite
   expirationDate: timestamp('expiration_date', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -109,11 +110,27 @@ export const sales = stockSchema.table('sales', {
   purchasePriceSnapshot: integer('purchase_price_snapshot').notNull(), // centavos
   paymentType: paymentTypeEnum('payment_type').notNull(),
   customerId: uuid('customer_id').references(() => customers.id),
+  sellerId: uuid('seller_id'),
+  status: text('status').notNull().default('paid'), // 'paid' | 'pending'
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('sales_business_id_idx').on(t.businessId),
   index('sales_customer_id_idx').on(t.customerId),
   index('sales_created_at_idx').on(t.createdAt),
+  index('sales_seller_id_idx').on(t.sellerId),
+])
+
+export const saleItems = stockSchema.table('sale_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  saleId: uuid('sale_id').notNull().references(() => sales.id, { onDelete: 'cascade' }),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  quantity: integer('quantity').notNull(),
+  unitPrice: integer('unit_price').notNull(),                // centavos — preço cobrado
+  unitCost: integer('unit_cost').notNull(),                  // centavos — custo no momento
+  discountPct: integer('discount_pct').notNull().default(0), // percentual inteiro (0-100)
+}, (t) => [
+  index('sale_items_sale_id_idx').on(t.saleId),
+  index('sale_items_product_id_idx').on(t.productId),
 ])
 
 export const creditPayments = stockSchema.table('credit_payments', {

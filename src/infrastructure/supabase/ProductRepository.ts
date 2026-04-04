@@ -13,6 +13,7 @@ function mapRow(row: any): Product {
     purchasePrice: row.purchase_price,
     salePrice: row.sale_price,
     notes: row.notes ?? null,
+    maxDiscountPct: row.max_discount_pct ?? null,
     expirationDate: row.expiration_date ? new Date(row.expiration_date) : null,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -71,6 +72,7 @@ export class ProductRepository implements IProductRepository {
         purchase_price: product.purchasePrice,
         sale_price: product.salePrice,
         notes: product.notes,
+        max_discount_pct: product.maxDiscountPct,
         expiration_date: product.expirationDate?.toISOString() ?? null,
       })
       .select()
@@ -89,6 +91,7 @@ export class ProductRepository implements IProductRepository {
     if (data.brand !== undefined) updateData.brand = data.brand
     if (data.barcode !== undefined) updateData.barcode = data.barcode
     if (data.notes !== undefined) updateData.notes = data.notes
+    if (data.maxDiscountPct !== undefined) updateData.max_discount_pct = data.maxDiscountPct
     if (data.purchasePrice !== undefined) updateData.purchase_price = data.purchasePrice
     if (data.salePrice !== undefined) updateData.sale_price = data.salePrice
     if (data.expirationDate !== undefined) updateData.expiration_date = data.expirationDate?.toISOString() ?? null

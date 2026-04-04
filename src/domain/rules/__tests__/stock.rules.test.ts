@@ -17,6 +17,7 @@ const makeProduct = (overrides: Partial<Product> = {}): Product => ({
   purchasePrice: 1000,
   salePrice: 1500,
   notes: null,
+  maxDiscountPct: null,
   expirationDate: null,
   createdAt: new Date(),
   updatedAt: new Date(),

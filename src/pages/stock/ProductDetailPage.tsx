@@ -226,6 +226,12 @@ export function ProductDetailPage() {
               )
             })()}
           </div>
+          {product.maxDiscountPct !== null && (
+            <div>
+              <p className="text-muted-foreground">Desc. máximo</p>
+              <p className="font-semibold">{product.maxDiscountPct}%</p>
+            </div>
+          )}
           {product.expirationDate && (
             <div>
               <p className="text-muted-foreground">Validade</p>
