@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Clock } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Skeleton } from '@/components/ui/skeleton'
+import { StatCard } from '@/components/ui/stat-card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { formatPhone } from '@/domain/formatters/phone'
 import type { Customer, Sale, CreditPayment } from '@/domain/types'
 
@@ -92,13 +94,11 @@ export function CustomerDetailPage() {
         </div>
       )}
 
-      <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
-        <p className="text-sm text-blue-700">Saldo devedor</p>
-        {loading
-          ? <Skeleton className="mt-1 h-8 w-32" />
-          : <p className="text-2xl font-bold text-blue-800">{centsToBRL(balance)}</p>
-        }
-      </div>
+      <StatCard
+        variant="credit"
+        label="Saldo devedor"
+        value={loading ? null : centsToBRL(balance)}
+      />
 
       {balance > 0 && (
         <div className="rounded-xl border border-border bg-white p-4 space-y-3">
@@ -153,7 +153,7 @@ export function CustomerDetailPage() {
         {loading ? (
           <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div>
         ) : history.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum registro ainda</p>
+          <EmptyState icon={Clock} message="Nenhum registro ainda" />
         ) : (
           history.map((item, i) => (
             <div key={i} className={`rounded-xl border p-3 ${item.kind === 'payment' ? 'border-green-200 bg-green-50' : 'border-blue-100 bg-white'}`}>
