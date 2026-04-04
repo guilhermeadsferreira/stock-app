@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ScanLine, ChevronRight, UserPlus, ShoppingCart, X, Plus } from 'lucide-react'
+import { ArrowLeft, ScanLine, ChevronRight, UserPlus, Plus, ShoppingCart, Minus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,7 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuthStore } from '@/application/stores/authStore'
 import type { Product, Customer, CartItem, PaymentType } from '@/domain/types'
 
-type Step = 'payment' | 'customer' | 'add-item' | 'cart' | 'confirm'
+// Novo fluxo: carrinho → pagamento → cliente (se fiado) → confirmação
+type Step = 'cart' | 'payment' | 'customer' | 'confirm'
 
 const newCustomerSchema = z.object({
   name: z.string().min(2, 'Nome obrigatório'),
@@ -42,18 +43,18 @@ export function NewSalePage() {
   const { customers, load: loadCustomers, create: createCustomer } = useCustomers()
   const { createSale } = useSales()
 
-  const [step, setStep] = useState<Step>('payment')
+  const [step, setStep] = useState<Step>('cart')
   const [cart, setCart] = useState<CartItem[]>([])
   const [paymentType, setPaymentType] = useState<PaymentType | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
-  // add-item sub-state
+  // Busca de produto
   const [scanning, setScanning] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [currentStock, setCurrentStock] = useState(0)
 
-  // customer step
+  // Customer step
   const [customerSearch, setCustomerSearch] = useState('')
   const [newCustomerOpen, setNewCustomerOpen] = useState(false)
   const [creatingCustomer, setCreatingCustomer] = useState(false)
@@ -68,7 +69,7 @@ export function NewSalePage() {
   // Debounce produto
   const productDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    if (step !== 'add-item') return
+    if (step !== 'cart') return
     if (productDebounceRef.current) clearTimeout(productDebounceRef.current)
     productDebounceRef.current = setTimeout(() => {
       loadProducts({ search: searchText })
@@ -87,34 +88,29 @@ export function NewSalePage() {
     return () => { if (customerDebounceRef.current) clearTimeout(customerDebounceRef.current) }
   }, [customerSearch, loadCustomers, step])
 
-  // ─── Navegação de volta ──────────────────────────────────────────────────────
+  // ─── Navegação ──────────────────────────────────────────────────────────────
 
   function handleBack() {
-    if (step === 'payment') { navigate('/'); return }
-    if (step === 'customer') { setStep('payment'); return }
-    if (step === 'add-item') {
+    if (step === 'cart') {
       if (selectedProduct) { setSelectedProduct(null); return }
-      if (cart.length > 0) { setStep('cart'); return }
-      setStep('payment')
+      navigate('/')
       return
     }
-    if (step === 'cart') { setStep('add-item'); return }
-    if (step === 'confirm') { setStep('cart'); return }
+    if (step === 'payment') { setStep('cart'); return }
+    if (step === 'customer') { setStep('payment'); return }
+    if (step === 'confirm') {
+      setStep(paymentType === 'credit' ? 'customer' : 'payment')
+      return
+    }
   }
 
   function backLabel() {
-    if (step === 'payment') return 'Início'
-    if (step === 'add-item' && selectedProduct) return 'Produtos'
-    if (step === 'add-item' && cart.length > 0) return 'Carrinho'
+    if (step === 'cart' && selectedProduct) return 'Produtos'
+    if (step === 'cart') return 'Início'
     return 'Voltar'
   }
 
-  // ─── Handlers ────────────────────────────────────────────────────────────────
-
-  function handlePaymentType(type: PaymentType) {
-    setPaymentType(type)
-    setStep(type === 'credit' ? 'customer' : 'add-item')
-  }
+  // ─── Handlers ──────────────────────────────────────────────────────────────
 
   async function handleSelectProduct(product: Product) {
     const entry = await getEntry(product.id)
@@ -149,6 +145,11 @@ export function NewSalePage() {
     setCart(prev => prev.filter((_, i) => i !== index))
   }
 
+  function handlePaymentType(type: PaymentType) {
+    setPaymentType(type)
+    setStep(type === 'credit' ? 'customer' : 'confirm')
+  }
+
   async function handleCreateCustomer(values: NewCustomerForm) {
     setCreatingCustomer(true)
     try {
@@ -157,7 +158,7 @@ export function NewSalePage() {
       setNewCustomerOpen(false)
       customerForm.reset()
       toast.success('Cliente cadastrado!')
-      setStep('add-item')
+      setStep('confirm')
     } catch {
       toast.error('Erro ao cadastrar cliente')
     } finally {
@@ -181,7 +182,7 @@ export function NewSalePage() {
 
   const cartTotal = cart.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0)
 
-  // ─── Render ───────────────────────────────────────────────────────────────────
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-4 px-4 pt-6 pb-8">
@@ -190,100 +191,13 @@ export function NewSalePage() {
         {backLabel()}
       </button>
 
-      {/* Step: Forma de pagamento */}
-      {step === 'payment' && (
+      {/* ── Step: Carrinho (tela principal) ── */}
+      {step === 'cart' && (
         <div className="space-y-4">
-          <h1 className="text-xl font-bold">Como vai pagar?</h1>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => handlePaymentType('cash')}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-green-800 hover:bg-green-100"
-            >
-              <span className="text-3xl">💵</span>
-              <span className="font-semibold">Dinheiro</span>
-            </button>
-            <button
-              onClick={() => handlePaymentType('card')}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-purple-200 bg-purple-50 p-6 text-purple-800 hover:bg-purple-100"
-            >
-              <span className="text-3xl">💳</span>
-              <span className="font-semibold">Cartão</span>
-            </button>
-            <button
-              onClick={() => handlePaymentType('pix')}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-teal-200 bg-teal-50 p-6 text-teal-800 hover:bg-teal-100"
-            >
-              <span className="text-3xl">⚡</span>
-              <span className="font-semibold">PIX</span>
-            </button>
-            <button
-              onClick={() => handlePaymentType('credit')}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-blue-200 bg-blue-50 p-6 text-blue-800 hover:bg-blue-100"
-            >
-              <span className="text-3xl">📒</span>
-              <span className="font-semibold">Fiado</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step: Selecionar cliente */}
-      {step === 'customer' && (
-        <div className="space-y-4">
-          <h1 className="text-xl font-bold">Selecionar cliente</h1>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Buscar cliente..."
-              value={customerSearch}
-              onChange={e => setCustomerSearch(e.target.value)}
-            />
-            <Button variant="outline" size="icon" onClick={() => setNewCustomerOpen(true)} aria-label="Novo cliente">
-              <UserPlus className="h-4 w-4" />
-            </Button>
-          </div>
-          {customers.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground py-4">
-              Nenhum cliente encontrado.{' '}
-              <button className="text-primary underline" onClick={() => setNewCustomerOpen(true)}>
-                Cadastrar novo
-              </button>
-            </p>
-          )}
-          <div className="space-y-2">
-            {customers.map(c => (
-              <button
-                key={c.id}
-                onClick={() => { setSelectedCustomer(c); setStep('add-item') }}
-                className={`flex w-full items-center justify-between rounded-xl border p-3 text-left ${selectedCustomer?.id === c.id ? 'border-primary bg-green-50' : 'border-border bg-white'}`}
-              >
-                <div>
-                  <p className="font-medium">{c.name}</p>
-                  {c.phone && <p className="text-sm text-muted-foreground">{c.phone}</p>}
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Step: Adicionar item ao carrinho */}
-      {step === 'add-item' && (
-        <div className="space-y-4">
-          {/* Cabeçalho com badge do carrinho */}
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">
-              {selectedProduct ? selectedProduct.name : 'Adicionar produto'}
+              {selectedProduct ? selectedProduct.name : 'Nova venda'}
             </h1>
-            {cart.length > 0 && !selectedProduct && (
-              <button
-                onClick={() => setStep('cart')}
-                className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {cart.length} {cart.length === 1 ? 'item' : 'itens'}
-              </button>
-            )}
           </div>
 
           {/* Sub-estado: nenhum produto selecionado → busca */}
@@ -309,7 +223,10 @@ export function NewSalePage() {
                     onClick={() => handleSelectProduct(p)}
                     className="flex w-full items-center justify-between rounded-xl border border-border bg-white p-3 text-left"
                   >
-                    <span className="font-medium">{p.name}</span>
+                    <div>
+                      <span className="font-medium">{p.name}</span>
+                      <span className="ml-2 text-sm text-muted-foreground">{centsToBRL(p.salePrice)}</span>
+                    </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </button>
                 ))}
@@ -365,52 +282,136 @@ export function NewSalePage() {
               </Form>
             </>
           )}
+
+          {/* Carrinho (sempre visível quando tem itens) */}
+          {cart.length > 0 && !selectedProduct && (
+            <div className="space-y-3 rounded-2xl border border-border bg-white p-4">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-primary" />
+                <h2 className="font-semibold text-sm">Carrinho ({cart.length} {cart.length === 1 ? 'item' : 'itens'})</h2>
+              </div>
+
+              <div className="space-y-2">
+                {cart.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.product.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.quantity}× {centsToBRL(item.unitPrice)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                      <span className="text-sm font-semibold">{centsToBRL(item.quantity * item.unitPrice)}</span>
+                      <button
+                        onClick={() => removeFromCart(i)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        aria-label="Remover item"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between border-t pt-2">
+                <span className="font-semibold text-sm">Total</span>
+                <span className="text-lg font-bold text-primary">{centsToBRL(cartTotal)}</span>
+              </div>
+
+              <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
+                Avançar para pagamento
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Step: Carrinho */}
-      {step === 'cart' && (
+      {/* ── Step: Forma de pagamento ── */}
+      {step === 'payment' && (
         <div className="space-y-4">
-          <h1 className="text-xl font-bold">Carrinho</h1>
+          <h1 className="text-xl font-bold">Como vai pagar?</h1>
+
+          {/* Resumo do carrinho */}
+          <div className="rounded-xl bg-muted/50 px-4 py-3 flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">{cart.length} {cart.length === 1 ? 'item' : 'itens'}</span>
+            <span className="font-bold text-primary">{centsToBRL(cartTotal)}</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handlePaymentType('cash')}
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-green-800 hover:bg-green-100"
+            >
+              <span className="text-3xl">💵</span>
+              <span className="font-semibold">Dinheiro</span>
+            </button>
+            <button
+              onClick={() => handlePaymentType('card')}
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-purple-200 bg-purple-50 p-6 text-purple-800 hover:bg-purple-100"
+            >
+              <span className="text-3xl">💳</span>
+              <span className="font-semibold">Cartão</span>
+            </button>
+            <button
+              onClick={() => handlePaymentType('pix')}
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-teal-200 bg-teal-50 p-6 text-teal-800 hover:bg-teal-100"
+            >
+              <span className="text-3xl">⚡</span>
+              <span className="font-semibold">PIX</span>
+            </button>
+            <button
+              onClick={() => handlePaymentType('credit')}
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-blue-200 bg-blue-50 p-6 text-blue-800 hover:bg-blue-100"
+            >
+              <span className="text-3xl">📒</span>
+              <span className="font-semibold">Fiado</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Step: Selecionar cliente (fiado) ── */}
+      {step === 'customer' && (
+        <div className="space-y-4">
+          <h1 className="text-xl font-bold">Selecionar cliente</h1>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Buscar cliente..."
+              value={customerSearch}
+              onChange={e => setCustomerSearch(e.target.value)}
+            />
+            <Button variant="outline" size="icon" onClick={() => setNewCustomerOpen(true)} aria-label="Novo cliente">
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          </div>
+          {customers.length === 0 && (
+            <p className="text-center text-sm text-muted-foreground py-4">
+              Nenhum cliente encontrado.{' '}
+              <button className="text-primary underline" onClick={() => setNewCustomerOpen(true)}>
+                Cadastrar novo
+              </button>
+            </p>
+          )}
           <div className="space-y-2">
-            {cart.map((item, i) => (
-              <div key={i} className="flex items-center justify-between rounded-xl border border-border bg-white p-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{item.product.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {item.quantity}× {centsToBRL(item.unitPrice)}
-                  </p>
+            {customers.map(c => (
+              <button
+                key={c.id}
+                onClick={() => { setSelectedCustomer(c); setStep('confirm') }}
+                className={`flex w-full items-center justify-between rounded-xl border p-3 text-left ${selectedCustomer?.id === c.id ? 'border-primary bg-green-50' : 'border-border bg-white'}`}
+              >
+                <div>
+                  <p className="font-medium">{c.name}</p>
+                  {c.phone && <p className="text-sm text-muted-foreground">{c.phone}</p>}
                 </div>
-                <div className="flex items-center gap-3 ml-2">
-                  <span className="font-semibold text-sm">{centsToBRL(item.quantity * item.unitPrice)}</span>
-                  <button
-                    onClick={() => removeFromCart(i)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    aria-label="Remover item"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
             ))}
           </div>
-
-          <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
-            <span className="font-semibold">Total</span>
-            <span className="text-lg font-bold text-primary">{centsToBRL(cartTotal)}</span>
-          </div>
-
-          <Button variant="outline" className="w-full" onClick={() => setStep('add-item')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar mais produtos
-          </Button>
-          <Button className="w-full" size="lg" onClick={() => setStep('confirm')} disabled={cart.length === 0}>
-            Confirmar venda
-          </Button>
         </div>
       )}
 
-      {/* Step: Confirmação */}
+      {/* ── Step: Confirmação ── */}
       {step === 'confirm' && (
         <div className="space-y-4">
           <h1 className="text-xl font-bold">Confirmar venda</h1>

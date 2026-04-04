@@ -67,7 +67,7 @@ export function NewProductPage() {
     <div className="space-y-4 px-4 pt-6 pb-8">
       <button onClick={() => navigate('/stock')} className="flex items-center gap-1 text-sm text-muted-foreground">
         <ArrowLeft className="h-4 w-4" />
-        Estoque
+        Produtos
       </button>
       <h1 className="text-xl font-bold">Novo produto</h1>
 

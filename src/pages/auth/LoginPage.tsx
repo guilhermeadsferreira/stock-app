@@ -62,7 +62,7 @@ export function LoginPage() {
           <div className="mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
             <Package className="h-7 w-7 text-white" strokeWidth={1.5} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Gestão de Estoque</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Gestão de Produtos</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">Entre na sua conta para continuar</p>
         </div>
 

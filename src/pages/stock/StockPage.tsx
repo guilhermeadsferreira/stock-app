@@ -67,7 +67,7 @@ export function StockPage() {
   return (
     <div className="space-y-4 px-5 pt-8 md:px-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Estoque</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Produtos</h1>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => navigate('/stock/scan')} className="rounded-xl gap-1.5">
             <ScanLine className="h-3.5 w-3.5" strokeWidth={2.5} />
