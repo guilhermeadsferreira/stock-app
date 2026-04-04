@@ -148,7 +148,7 @@ export function CheckoutPage() {
       </div>
 
       {/* Payment selection */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
           onClick={() => handlePaymentType('cash')}
           className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 ${

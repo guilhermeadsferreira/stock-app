@@ -18,7 +18,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { cn } from '@/lib/utils'
+import { StatCard } from '@/components/ui/stat-card'
+import { FilterChips } from '@/components/ui/filter-chips'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PageHeader } from '@/components/ui/page-header'
 import { formatPhone } from '@/domain/formatters/phone'
 import type { Customer } from '@/domain/types'
 
@@ -113,87 +116,82 @@ export function CustomersPage() {
   }
 
   return (
-    <div className="space-y-4 px-5 pt-8 pb-8 md:px-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
-        <button
-          onClick={() => setDialogOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm active:scale-95 transition-transform"
-          aria-label="Novo cliente"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} />
-        </button>
-      </div>
-
-      {!loading && creditCount > 0 && (
-        <div className="rounded-2xl bg-[#1e3a8a] p-5 text-white">
-          <p className="text-sm text-blue-200 font-medium mb-2">Total em fiado</p>
-          <p className="text-3xl font-bold leading-none tracking-tight">{centsToBRL(totalCredit)}</p>
-          <p className="text-xs text-blue-300 mt-2">
-            {creditCount} cliente{creditCount !== 1 ? 's' : ''} com saldo em aberto
-          </p>
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex rounded-xl border border-border bg-muted/40 p-1 gap-1">
-        {([['all', 'Todos'], ['credit', 'Fiado em aberto']] as [Tab, string][]).map(([value, label]) => (
+    <div className="space-y-4 pb-8">
+      <PageHeader
+        title="Clientes"
+        actions={
           <button
-            key={value}
-            onClick={() => setTab(value)}
-            className={cn(
-              'flex-1 rounded-lg py-1.5 text-sm font-medium transition-all duration-200',
-              tab === value
-                ? 'bg-white shadow-sm text-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
+            onClick={() => setDialogOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm active:scale-95 transition-transform"
+            aria-label="Novo cliente"
           >
-            {label}
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
           </button>
-        ))}
-      </div>
-
-      <Input
-        placeholder="Buscar cliente..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
+        }
       />
+      <div className="px-5 md:px-8 space-y-4">
+        {!loading && creditCount > 0 && (
+          <StatCard
+            variant="credit"
+            label="Total em fiado"
+            value={centsToBRL(totalCredit)}
+          >
+            <p className="text-xs text-blue-300 mt-2">
+              {creditCount} cliente{creditCount !== 1 ? 's' : ''} com saldo em aberto
+            </p>
+          </StatCard>
+        )}
 
-      {loading ? (
-        <div className="space-y-2.5">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-[68px] w-full rounded-2xl" />)}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="py-16 text-center">
-          <Users className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" strokeWidth={1.5} />
-          <p className="text-sm text-muted-foreground">
-            {tab === 'credit' ? 'Nenhum fiado em aberto' : 'Nenhum cliente cadastrado'}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2.5">
-          {filtered.map(c => (
-            <button
-              key={c.id}
-              onClick={() => navigate(`/customers/${c.id}`)}
-              className="flex w-full items-center justify-between rounded-2xl bg-card px-4 py-3.5 text-left shadow-sm active:scale-[0.99] active:shadow-none transition-all duration-150"
-            >
-              <div>
-                <p className="font-semibold text-[15px]">{c.name}</p>
-                {c.phone && <p className="text-sm text-muted-foreground mt-0.5">{formatPhone(c.phone)}</p>}
-              </div>
-              <div className="flex items-center gap-2">
-                {c.balance > 0 && (
-                  <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-                    {centsToBRL(c.balance)}
-                  </span>
-                )}
-                <ChevronRight className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.75} />
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+        <FilterChips
+          options={[
+            { label: 'Todos', value: 'all' as Tab },
+            { label: 'Fiado em aberto', value: 'credit' as Tab },
+          ]}
+          value={tab}
+          onChange={setTab}
+          variant="compact"
+        />
+
+        <Input
+          placeholder="Buscar cliente..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+
+        {loading ? (
+          <div className="space-y-2.5">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-[68px] w-full rounded-2xl" />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            message={tab === 'credit' ? 'Nenhum fiado em aberto' : 'Nenhum cliente cadastrado'}
+          />
+        ) : (
+          <div className="space-y-2.5">
+            {filtered.map(c => (
+              <button
+                key={c.id}
+                onClick={() => navigate(`/customers/${c.id}`)}
+                className="flex w-full items-center justify-between rounded-2xl bg-card px-4 py-3.5 text-left shadow-sm active:scale-[0.99] active:shadow-none transition-all duration-150"
+              >
+                <div>
+                  <p className="font-semibold text-[15px]">{c.name}</p>
+                  {c.phone && <p className="text-sm text-muted-foreground mt-0.5">{formatPhone(c.phone)}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  {c.balance > 0 && (
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+                      {centsToBRL(c.balance)}
+                    </span>
+                  )}
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.75} />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={open => { setDialogOpen(open); if (!open) form.reset() }}>
         <DialogContent>
