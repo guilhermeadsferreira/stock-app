@@ -82,7 +82,11 @@ export class SaleRepository implements ISaleRepository {
     const { error: itemsError } = await this.client
       .from('sale_items')
       .insert(itemRows)
-    if (itemsError) throw new Error(itemsError.message)
+    if (itemsError) {
+      // Rollback: deleta a venda órfã para não deixar lixo no banco
+      await this.client.from('sales').delete().eq('id', saleData.id)
+      throw new Error(itemsError.message)
+    }
 
     const sale = mapRow(saleData)
     sale.items = input.items.map((item) => ({
