@@ -249,7 +249,7 @@ export function ProductDetailPage() {
       </div>
 
       {/* Ações de estoque: repor + corrigir lado a lado */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <h2 className="font-semibold flex items-center gap-2 text-sm">
             <Package className="h-4 w-4" />
@@ -312,7 +312,7 @@ export function ProductDetailPage() {
           Ações destrutivas
         </h2>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <AlertDialog>
             <AlertDialogTrigger
               render={<Button variant="outline" size="sm" className="w-full border-destructive/40 text-destructive hover:bg-destructive/5" disabled={submittingReset} />}
