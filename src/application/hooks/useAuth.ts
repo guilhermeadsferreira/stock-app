@@ -32,7 +32,7 @@ async function loadDisplayName(userId: string): Promise<string | null> {
     .eq('id', userId)
     .single()
     .then(({ data }) => data?.name ?? null)
-  return withTimeout(query, 8000, null)
+  return withTimeout(Promise.resolve(query), 8000, null)
 }
 
 function pickCurrentBusiness(businesses: Business[]): Business | null {
