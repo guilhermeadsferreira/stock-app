@@ -8,10 +8,7 @@ interface Props {
 export function ProtectedRoute({ children }: Props) {
   const { session, businesses, currentBusiness, isLoading } = useAuthStore()
 
-  if (session && currentBusiness) {
-    return <>{children}</>
-  }
-
+  // 1. Ainda verificando sessão / carregando dados → spinner
   if (isLoading) {
     return (
       <div className="flex h-dvh items-center justify-center">
@@ -20,23 +17,21 @@ export function ProtectedRoute({ children }: Props) {
     )
   }
 
+  // 2. Sem sessão → login
   if (!session) {
     return <Navigate to="/login" replace />
   }
 
-  // businesses === null significa que ainda não carregou — mantém spinner
-  if (businesses === null) {
-    return (
-      <div className="flex h-dvh items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
-  }
-
-  if (businesses.length === 0) {
+  // 3. Sem empresas → onboarding
+  if (!businesses || businesses.length === 0) {
     return <Navigate to="/onboarding" replace />
   }
 
-  // Autenticado, tem empresas mas nenhuma selecionada
-  return <Navigate to="/companies" replace />
+  // 4. Tem empresas mas nenhuma selecionada → seleção
+  if (!currentBusiness) {
+    return <Navigate to="/companies" replace />
+  }
+
+  // 5. Tudo pronto → renderiza
+  return <>{children}</>
 }

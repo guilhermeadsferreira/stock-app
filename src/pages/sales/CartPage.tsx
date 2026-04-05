@@ -253,7 +253,7 @@ export function CartPage() {
 
       {/* Fixed footer */}
       {items.length > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 border-t bg-background px-5 py-3 lg:left-60 md:px-8">
+        <div className="fixed bottom-[4.5rem] left-0 right-0 border-t bg-background px-5 py-3 pb-safe lg:bottom-0 lg:left-60 md:px-8">
           <div className="flex items-center justify-between mb-2">
             <span className="font-semibold">Total</span>
             <span className="text-lg font-bold text-primary">{centsToBRL(total())}</span>

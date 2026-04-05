@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, ScrollRestoration, useNavigate } from 'react-router-dom'
 import { Building2, ChevronRight } from 'lucide-react'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
@@ -9,14 +9,15 @@ export function AppShell() {
   const { currentBusiness } = useAuthStore()
 
   return (
-    <div className="flex min-h-dvh bg-background">
+    <div className="flex h-dvh overflow-hidden bg-background">
+      <ScrollRestoration />
       {/* Desktop sidebar */}
       <Sidebar />
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col lg:pl-60">
+      <div className="flex flex-1 flex-col overflow-hidden lg:pl-60">
         {currentBusiness && (
-          <header className="border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-40 lg:hidden">
+          <header className="border-b border-border/50 bg-background/95 backdrop-blur-sm shrink-0 z-40 lg:hidden">
             <button
               onClick={() => navigate('/companies')}
               className="flex w-full items-center gap-2 px-4 py-2.5 text-left"
@@ -28,8 +29,8 @@ export function AppShell() {
           </header>
         )}
 
-        <main className="flex-1 pb-24 lg:pb-6 overflow-x-hidden">
-          <div className="mx-auto max-w-4xl">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-6">
+          <div className="mx-auto lg:max-w-4xl">
             <Outlet />
           </div>
         </main>
